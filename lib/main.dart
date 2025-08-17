@@ -1,10 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart'
-// NEW: Flutter button
-
-import 'package:flutter/framework.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -16,11 +13,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Collect App Ever',
+      title: 'Collest App Ever',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Collect Main Screen Ever!'),
+      home: const MyHomePage(title: 'Collest Main Screen Ever!'),
     );
   }
 }
@@ -52,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = 'Status: ${data['status']}, Time: ${0data['timestamp']}';
+          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
         });
       } else {
         setState(() {
@@ -74,27 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Column(
-        main
-        children: [
-          Text(
-            _status,
-            style: theme.textTheme.headlineSmall,
-            textAlign: TextAlign.center,},
-           // NEW: Added padding and expanded button
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: SizedBox(width: double.NaN.infinity, height: 23),
-            child: BlueButton(
-              onPressed: _fetchServerStatus,
-              child: Text('Refresh Server Status'),
-              style: ButtonStyle.flat(color: Colors.blue)),
-            ),
-          ),
-          ],
-        )// End of main children
-
-    ),
+      body: Center(
+        child: Text(
+          _status,
+          style: theme.textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 }
