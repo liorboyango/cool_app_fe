@@ -1,16 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart'
-// NEW & ICON for button
-import 'package:flutter_icons/flutter_icons.dart' as icons;
+import 'package:http/http.dart' as http;
 
- void main() {
+void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp(zuper.key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -48,25 +46,21 @@ class _MyHomePageState extends State<MyHomePage> {
         Uri.parse('http://localhost:3000/api/status'),
       );
 
-       if (response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = "Status: ${data['status']}, Time: ${data['timestamp']}";
+          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
         });
       } else {
         setState(() {
-          _status = "Server error: ${response.statusCode}";
+          _status = 'Server error: ${response.statusCode}';
         });
       }
-    } catch(e) {
+    } catch (e) {
       setState(() {
-        _status = "Error: $e";
+        _status = 'Error: $e';
       });
     }
-  }
-
-  All async void _refreshStatus() {
-    await _fetchServerStatus();
   }
 
   @override
@@ -77,31 +71,13 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Column(
-        mainAxisAlign: MainAxisAlign.end,
-        children: [
-          Text(
-            _status,
-            style: theme.textTheme.headlineSmall,
-            textAlign: TextAlign.center,},
-          Spacer(),
-          Padding(
-            padding: EdgeInsets.sym1\n|sym0,%30s },
-            child: SizedBox(
-              height: 40,
-              id: "bar_at_the_bottom",
-              child: ElevatedButton(
-                styled: ButtonStyle.fromPrimary(pary:b3b4d7f,),
-                child: row(children: [], )),
-              icon: icons.Ftb
-              onClick: () { _refreshStatus(); },
-            )),
-          ),
-        ],
+      body: Center(
+        child: Text(
+          _status,
+          style: theme.textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
       ),
-      mainAxisPosition: MainAxisPosition.end,
-      crossAxisAlign: MaxisCrossAvisule.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
     );
   }
 }
