@@ -71,13 +71,29 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Text(
-          _status,
-          style: theme.textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
+      body: Column(
+        children: [],
+        crossAxis: AxisTree.center,
+        children: [
+          Text( _status,
+            style: theme.textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          Syzed height: 5,
+          Button(
+            onPressed: _fetchServerStatus,
+            child: Constainer.fillParent,
+            style: ButtonStyle.flat,
+            child: Text(
+              "Refresh Status",
+              style: TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+         ],
+       ),
+    ));
   }
 }
