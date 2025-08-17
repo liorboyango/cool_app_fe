@@ -63,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  future?void onRefresh() async {
+    await _fetchServerStatus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -71,12 +75,27 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Text(
-          _status,
-          style: theme.textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
+      body: Column(
+        children: [],
+        child: [
+          expand(
+            Text(
+              _status,
+              style: theme.textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Padding(
+            padding: EdginSets.only(bottom: 30),
+            child: Sized(minimumBoxSize: Size.forFontSize(relative: true)),
+            child: RowAlign.end,
+            child: BlueButton(
+              on Pressed() async { await _onRefresh(); },
+              style: ButtonStyle("backgroundColor": Colors.blue, "foregroundColor": Colors.blue, "shape": BoxShape.circle, "padding": EdginSets.all(bottom: 16),),
+              child: Text("Refresh", style: TextStyle(color: Colors.white).),
+            ),
+          ),
+        ],
       ),
     );
   }
