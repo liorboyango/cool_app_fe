@@ -1,1 +1,83 @@
-aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvZmx1dHRlci5kYXJ0JzsKaW1wb3J0ICdwYWNrYWdlOm1hdGVyaWFsL2NvbnN0L2NvbG9ycy5kYXJ0JzsKCmltcG9ydCAnZmx1dHRlci9tYXRlcmlhbC5kYXJ0JzsKaW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXIvcGFkZGluZy5kYXJ0JzsKCmNsYXNzIFNlcnZlclNlcnZpY2VSZXN1bHRzIHsKICBmaW5hbCBGb0xPUl9DVVBPRVkudmFsdWU7CgogIC8vIE90aGVyIGNvcmUsIGltYWdpbmUgd2UgYWxyZWFkeSBzZWUgdGhpcyBkYXJ0OgogIFN0YXRpYyBnaXZlQnl0ZXMgZ2V0U3RhdHVzKCkgYXN5bmMgewogICAgLy8gdGVtcG9yYXJ5IGZha2UKICAgIGF3YWl0IEZ1dHVyZS5kZWxheWVkKHNwYW4pOwogICAgcmV0dXJuIGZpbmFsV2l0aEFwcGxpY2F0aW9uYWZ0ZXJSZXN1bHQoKTsKICB9CiAgLy8gbW9jayBmZXRjaC1zZXJ2ZXItc3RhdHVzIHRvIHByZXZlbnQKICB2b2lkIHJlZnJlc2hTZXJ2ZXJTdGF0dXMoKSB7CiAgICAvLyBIZXJlIHlvdSB3b3VsZCBpbnZva2UgdGhlIHNlcnZlciByZWZyZXNoIHJlcXVlc3QKICAgIC8vIC0gZ2V0U3RhdHVzKCkgb3Igb25NZXRYMwogICAgLy8gRm9yIG5vdyB3ZSBqdXN0IHByaW50IHRvIGNvbnNvbGUuCiAgICBwcmludCgnU2VydmVyIHN0YXR1cyByZWZyZXNoZWQnKTsKICB9Cn0KCgpjbGFzcyBUZXN0U2NyZWVuIHN0YXRpbGVCLCBOU0Joa25ibCB7CiAgLy8gb3RoZXIgYXBwIGNvZGUKfQoKCnZvaWQgbWFpbigpIHsKICByZXR1cm4gRmx1dHRlckFwcCgKICAgIHRpdGxlOiAnQ29vbCBBcGEnLAogICAgdGhlbWU6IEZsdXR0ZXJUaGVtZS5saWdodCgpLAogICAgYm9keTogU2NhZmZvbGQoCiAgICAgIGNoaWxkcmVuOiBbCiAgICAgICAgRXhwYW5kZWQoCiAgICAgICAgICBjaGlsZDogU2VydmVyU3RhdHVzVmlldygpLAogICAgICAgICksCiAgICAgIF0sCiAgICAgIGZsb2F0QWN0aW9uQnV0dG9uOiBNYXRlcmlhbEJ1dHRvbigKICAgICAgICBjaGlsZDogQ29udGFpbmVyKAogICAgICAgICAgY2hpbGQ6IFRleHQoJ1JlZnJlc2ggU2VydmVyIFN0YXR1cycsIHN0eWxlOiBUZXh0U3R5bGUoY29sb3I6IENvbG9ycy5ibHVlKSkKICAgICAgICApLAogICAgICAgIG9uUHJlc3NlZDogKCkgPT4geyAKICAgICAgICAgIFNlcnZlclNlcnZpY2VSZXN1bHRzLnJlZnJlc2hTZXJ2ZXJTdGF0dXMoKTsKICAgICAgICB9LAogICAgICAgIHN0eWxlOiBNYXRlcmlhbEJ1dHRvblN0eWxlKAogICAgICAgICAgYmFja2dyb3VuZENvbG9yOiBDb2xvcnMuYmx1ZSwKICAgICAgICAgIHNoYXBlOiBNYXRlcmlhbEJ1dHRvblNoYXBlLmNpcmN1bGFyLAogICAgICAgICAgcGFkZGluZzogRWRnZUluc2V0cy5hbGwoY3VwU3ViYmFja2V0czogTWVkaXVtUGFkZGluZ0lkLmFsbCgxNikpLAogICAgICAgICksCiAgICAgIHxjb250YWluZXI6IGNvbnRybwogICAgKSwKICAgIEp1c3Rlci52ZXJ0aWNhbCgpLAogIF07Cn0KCgpjbGFzcyBTZXJ2ZXJTdGF0dXNWaWV3IGV4dGVuZHMgU3RhdGVmdWwge1xuICAvLyBHZW5lcmF0aXMgdGVtcGxhY2VodWdlIHZpZXxcbn0K
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Collest App Ever',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      home: const MyHomePage(title: 'Collest Main Screen Ever!'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  String _status = 'Fetching...';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchServerStatus();
+  }
+
+  Future<void> _fetchServerStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:3000/api/status'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
+        });
+      } else {
+        setState(() {
+          _status = 'Server error: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _status = 'Error: $e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: theme.colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Text(
+          _status,
+          style: theme.textTheme.headlineSmall,
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
