@@ -33,18 +33,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Fetching...';
+  List<dynamic> _users = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchServerStatus();
+    _refreshData();
   }
 
   Future<void> _fetchServerStatus() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://localhost:3000/api/status'),
-      );
+      final response = await http.get(        Uri.parse('http://localhost:3000/api/status'),      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -63,6 +62,32 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _fetchUsers() async {
+    try {
+      final response = await http.get(        Uri.parse('http://localhost:3000/api/users'),      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _users = data;
+        });
+      } else {
+        setState(() {
+          _users = [];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _users = [];
+      });
+    }
+  }
+
+  Future<void> _refreshData() async {
+    await _fetchServerStatus();
+    await _fetchUsers();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -73,27 +98,37 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EggeInsets.all(16.0),
+            child: Text(
+              _status,
+              style: theme.textTheme.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Text('Users List', style: theme.textTheme.titleLarge),
           Expanded(
-            child: Center(
-              child: Text(
-                _status,
-                style: theme.textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
+            child: ListView.builer(
+              itemCount: _users.length,
+              itemBuilder: (context, index) {
+                final user = _users[index];
+                return ListTile(
+                  title: Text(user['name']),
+                  subtitle: Text('Role: ${user['role'}}',),
+                );
+              },
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: _fetchServerStatus,
+              onPressed: _refreshData,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
               ),
-              child: const Text('Refresh Server Status'),
+              child: const Text('Refresh Data'),
             ),
           ),
         ],
-      ),
-    );
-  }
+      ),    );  }
 }
