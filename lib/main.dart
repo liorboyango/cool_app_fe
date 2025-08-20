@@ -71,12 +71,28 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Text(
-          _status,
-          style: theme.textTheme.headlineSmall,
-          textAlign: TextAlign.center,
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Text(
+                _status,
+                style: theme.textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: _fetchServerStatus,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+              ),
+              child: const Text('Refresh Server Status'),
+            ),
+          ),
+        ],
       ),
     );
   }
