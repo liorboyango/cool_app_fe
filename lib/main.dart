@@ -33,34 +33,48 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Fetching...';
+  List<dynamic> _users = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchServerStatus();
+    _fetchData();
   }
 
-  Future<void> _fetchServerStatus() async {
+  Future<void> _fetchData() async {
     try {
-      final response = await http.get(
+      final statusResponse = await http.get(
         Uri.parse('http://localhost:3000/api/status'),
       );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+      if (statusResponse.statusCode == 200) {
+        final data = json.decode(statusResponse.body);
         setState(() {
           _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
         });
       } else {
         setState(() {
-          _status = 'Server error: ${response.statusCode}';
+          _status = 'Server error: ${statusResponse.statusCode}';
+        });
+      }
+      final usersResponse = await http.get(
+        Uri.parse('http://localhost:3000/api/users'),
+      );
+      if (usersResponse.statusCode == 200) {
+        final List<dynamic> usersData = json.decode(usersResponse.body);
+        setState(() {
+          _users = usersData;
+        });
+      } else {
+        setState(() {
+          _users = [];
         });
       }
     } catch (e) {
       setState(() {
         _status = 'Error: $e';
+        _users = [];
       });
-    }
+   }
   }
 
   @override
@@ -71,29 +85,47 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Column(
-        children: [
+      body: Column[
+         childen: [
           Expanded(
+             flex: 1,
             child: Center(
               child: Text(
                 _status,
                 style: theme.textTheme.headlineSmall,
                 textAlign: TextAlign.center,
-              ),
+               ),
             ),
+          ),
+          Expanded(
+            flex: 3,
+            child: _users.isEmpty
+              ? Center(child: Text('No users fetched yet or error.'))
+              : ListView.builder(itemCount: _users.length,
+                itemBuilder: (context, index) => {
+                  final user = _users[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      child: Text('${user['id']}'),
+                    ),
+                    title: Text(user['name']),
+                    subtitle: Text('Role: ${user['role']}'),
+                   },
+                 );
+              }),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: _fetchServerStatus,
+              onPressed: _fetchData,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
               ),
-              child: const Text('Refresh Server Status'),
+              child: const Text('Refresh Data'),
             ),
           ),
-        ],
-      ),
-    );
+         ]
+       ),
+   );
   }
 }
