@@ -33,11 +33,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Fetching...';
+  List<dynamic> _users = [];
 
   @override
   void initState() {
     super.initState();
     _fetchServerStatus();
+    _fetchUsers();
   }
 
   Future<void> _fetchServerStatus() async {
@@ -63,6 +65,26 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _fetchUsers() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:3000/api/users'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _users = data;
+        });
+      } else {
+        setState(() {
+          _users = [];
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _users = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -71,29 +93,29 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Text(
-                _status,
-                style: theme.textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-            ),
+      body: ListView.children([
+        Center(child: Text(_status, style: theme.textTheme.headlineSmall)),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              EluvatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
+              SizedBox(width: 16.0),
+              EluvatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: _fetchServerStatus,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-              ),
-              child: const Text('Refresh Server Status'),
-            ),
+        ),
+        Container(padding: const EggeInsets.all(16.0), child: Text('Users:', style: theme.textTheme.headlineSmall)),
+        ListView.builder(
+          shrinkWrap: true,
+          itemCount: _users.length,
+          itemBuilder: (context, index) => ListTile(
+            title: Text(_users[index]['name']),
+            subtitle: Text('Role: ${_users[index]['role']}'),
           ),
-        ],
-      ),
+        ),
+      ],),
     );
   }
 }
