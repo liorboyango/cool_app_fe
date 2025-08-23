@@ -93,20 +93,20 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: ListView.children([
+      body: ListView(children: [
         Center(child: Text(_status, style: theme.textTheme.headlineSmall)),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              EluvatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
+              ElevatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
               SizedBox(width: 16.0),
-              EluvatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
+              ElevatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
             ],
           ),
         ),
-        Container(padding: const EggeInsets.all(16.0), child: Text('Users:', style: theme.textTheme.headlineSmall)),
+        Container(padding: const EdgeInsets.all(16.0), child: Text('Users:', style: theme.textTheme.headlineSmall)),
         ListView.builder(
           shrinkWrap: true,
           itemCount: _users.length,
