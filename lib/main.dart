@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
         return MaterialApp(
-          title: 'Collest App Ever',
+          title: 'Coolest App Ever',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           themeMode: themeNotifier.themeMode,
-          home: const MyHomePage(title: 'Collest Main Screen Ever!'),
+          home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
         );
       },
     );
