@@ -2,9 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+import 'theme_notifier.dart';
+import 'settings_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeNotifier(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -12,12 +21,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Collest App Ever',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Collest Main Screen Ever!'),
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          title: 'Collest App Ever',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+            useMaterial3: true,
+          ),
+          themeMode: themeNotifier.themeMode,
+          home: const MyHomePage(title: 'Collest Main Screen Ever!'),
+        );
+      },
     );
   }
 }
@@ -37,12 +56,20 @@ class _MyHomePageState extends State<MyHomePage> {
   String _searchQuery = '';
   String? _selectedRole;
   List<dynamic> _displayedUsers = [];
+  late TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(_updateSearchQuery);
     _fetchServerStatus();
     _fetchUsers();
+  }
+
+  void _updateSearchQuery() {
+    _searchQuery = _searchController.text;
+    _updateDisplayedUsers();
   }
 
   Future<void> _fetchServerStatus() async {
@@ -75,8 +102,8 @@ class _MyHomePageState extends State<MyHomePage> {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           _users = data;
+          _updateDisplayedUsers();
         });
-        _updateDisplayedUsers();
       } else {
         setState(() {
           _users = [];
@@ -117,6 +144,18 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: ListView(
         children: [
@@ -127,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
-                SizedBox(width: 16.0),
+                const SizedBox(width: 16.0),
                 ElevatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
               ],
             ),
@@ -135,14 +174,19 @@ class _MyHomePageState extends State<MyHomePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: TextField(
-              decoration: const InputDecoration(
+              controller: _searchController,
+              decoration: InputDecoration(
                 labelText: 'Search by name',
                 border: OutlineInputBorder(),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      )
+                    : null,
               ),
-              onChanged: (value) {
-                _searchQuery = value;
-                _updateDisplayedUsers();
-              },
             ),
           ),
           Padding(
@@ -163,8 +207,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               }).toList(),
               onChanged: (String? newValue) {
-                _selectedRole = newValue;
-                _updateDisplayedUsers();
+                setState(() {
+                  _selectedRole = newValue;
+                  _updateDisplayedUsers();
+                });
               },
             ),
           ),
@@ -184,5 +230,11 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }

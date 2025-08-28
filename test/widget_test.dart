@@ -1,30 +1,57 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:cool_app_fe/main.dart';
+import 'package:cool_app_fe/theme_notifier.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Home page renders correctly', (WidgetTester tester) async {
+    await tester.pumpWidget(ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: const MyApp(),
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Collest Main Screen Ever!'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byIcon(Icons.settings), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Search field clear button appears and works', (WidgetTester tester) async {
+    await tester.pumpWidget(ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: const MyApp(),
+    ));
+
+    final textFieldFinder = find.byType(TextField);
+    expect(textFieldFinder, findsOneWidget);
+
+    expect(find.byIcon(Icons.clear), findsNothing);
+
+    await tester.enterText(textFieldFinder, 'test');
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byIcon(Icons.clear), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.clear));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.clear), findsNothing);
+
+    final textField = tester.widget<TextField>(textFieldFinder);
+    expect(textField.controller!.text, '');
+  });
+
+  testWidgets('Settings screen can be opened and has toggle', (WidgetTester tester) async {
+    await tester.pumpWidget(ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: const MyApp(),
+    ));
+
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Dark Theme'), findsOneWidget);
   });
 }
