@@ -57,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedRole;
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
+  int? _selectedUserId;
 
   @override
   void initState() {
@@ -112,8 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       setState(() {
-        _users = [];
-        _displayedUsers = [];
+          _users = [];
+          _displayedUsers = [];
       });
     }
   }
@@ -133,7 +134,57 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     setState(() {
       _displayedUsers = filtered;
+      if (_selectedUserId != null && !filtered.any((u) => u['id'] == _selectedUserId)) {
+        _selectedUserId = null;
+      }
     });
+  }
+
+  Future<void> _deleteUser(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('http://localhost:3000/api/users/$id'));
+      if (response.statusCode == 200) {
+        await _fetchUsers();
+        setState(() {
+          _selectedUserId = null;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete user')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  void _confirmDelete(dynamic user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete ${user['name']} forever?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteUser(user['id']);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -223,8 +274,25 @@ class _MyHomePageState extends State<MyHomePage> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _displayedUsers.length,
             itemBuilder: (context, index) => ListTile(
-              title: Text(_displayedUsers[index]['name']),
+              title: Text(
+                _displayedUsers[index]['name'],
+                style: _displayedUsers[index]['id'] == _selectedUserId
+                    ? const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)
+                    : null,
+              ),
               subtitle: Text('Role: ${_displayedUsers[index]['role']}'),
+              trailing: _displayedUsers[index]['id'] == _selectedUserId
+                  ? IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => _confirmDelete(_displayedUsers[index]),
+                    )
+                  : null,
+              onTap: () {
+                setState(() {
+                  final userId = _displayedUsers[index]['id'];
+                  _selectedUserId = (_selectedUserId == userId) ? null : userId;
+                });
+              },
             ),
           ),
         ],
