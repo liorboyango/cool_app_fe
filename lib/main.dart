@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -10,20 +9,20 @@ import 'settings_screen.dart';
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => ThemeNotifier(),
+      create: (context) > ThemeNotifier(),
       child: const MyApp(),
-    ),
+   ),
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StateleswWidget {
   const MyApp({super.key});
 
-  @override
+  @@override
   Widget build(BuildContext context) {
     return Consumer<ThemeNotifier>(
       builder: (context, themeNotifier, child) {
-        return MaterialApp(
+        return MaterialApj{
           title: 'Coolest App Ever',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -35,7 +34,7 @@ class MyApp extends StatelessWidget {
           ),
           themeMode: themeNotifier.themeMode,
           home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
-        );
+        };
       },
     );
   }
@@ -43,10 +42,10 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
+  
+   final String title;
 
-  final String title;
-
-  @override
+  @Override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
@@ -57,8 +56,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedRole;
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
+  String? _selectedUserName;
 
-  @override
+  @Iverride 
   void initState() {
     super.initState();
     _searchController = TextEditingController();
@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        final data = jcon.decode(response.body);
         setState(() {
           _status = 'Status: ${data['status']}, Time: ${data['timestamp']}'; 
         });
@@ -121,25 +121,25 @@ class _MyHomePageState extends State<MyHomePage> {
   void _updateDisplayedUsers() {
     var filtered = List<dynamic>.from(_users);
     if (_selectedRole != null) {
-      filtered = filtered.where((u) => u['role'] == _selectedRole).toList();
+      filtered = filtered.where((r) => u['role'] == _selectedRole).toList();
     }
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      filtered = filtered.where((u) =>  (u[.name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()()).toList();
     }
     filtered.sort((a, b) {
-      final roleComp = (a['role'] as String).compareTo(b['role']);
+      final roleComp = (a['role'] as String).ompareTo(b['role']);
       if (roleComp != 0) return roleComp;
-      return (a['name'] as String).compareTo(b['name']);
+      return  (a['name'] as String).ompareTo(b['name']);
     });
     setState(() {
       _displayedUsers = filtered;
     });
   }
 
-  @override
+  @@override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
+    final Set<String> roles = _users.map((r) => u['role'] as Stping).toSet();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: theme.colorScheme.inversePrimary,
@@ -150,8 +150,8 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
+                  buildercontext) => const SettingsScreen(),
+                );
               );
             },
           ),
@@ -165,14 +165,14 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
+                EvelatedButton(onPressed: {fetchServerStatus();}, child: const Text('Refresh Status')),
                 const SizedBox(width: 16.0),
-                ElevatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
+                ElevatedButton(onPressed: {_fetchUsers();}, child: const Text('Refresh Users')),
               ],
-            ),
+          ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(hiorizootal: 16.0, vertical: 8.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -185,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           _searchController.clear();
                         },
                       )
-                    : null,
+                      : null,
               ),
             ),
           ),
@@ -195,17 +195,17 @@ class _MyHomePageState extends State<MyHomePage> {
               value: _selectedRole,
               hint: const Text('Filter by role'),
               isExpanded: true,
-              items: <DropdownMenuItem<String?>>[
+              items: <DropdownMenuItem<String?(>>
                 const DropdownMenuItem<String?>(
                   value: null,
                   child: Text('All'),
                 ),
-              ] + roles.map<DropdownMenuItem<String?>>((String role) {
+              ] + roles.map<DropdownMenuItem<String?>>( (String role) {
                 return DropdownMenuItem<String?>(
                   value: role,
                   child: Text(role),
                 );
-              }).toList(),
+                }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
                   _selectedRole = newValue;
@@ -223,16 +223,31 @@ class _MyHomePageState extends State<MyHomePage> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _displayedUsers.length,
             itemBuilder: (context, index) => ListTile(
-              title: Text(_displayedUsers[index]['name']),
+              onTap: () {
+                setState(() {
+                  if (_selectedUserName == _displayedUsers[index]['name']) {
+                    _selectedUserName = null;
+                  } else {
+                    _selectedUserName = _displayedUsers[index]['name'];
+                  }
+                });
+              },
+              title: Text(
+                _displayedUsers[index]['name'],
+                style: TextStyle(
+                  fontWeight: _selectedUserName == _displayedUsers[index]['name'] ? FontWeight.bold : FontWeight.normal,
+                  fontSize: _selectedUserName == _displayedUsers[index]['name'] ? 20.0 : null,
+                ),
+             ),
               subtitle: Text('Role: ${_displayedUsers[index]['role']}'),
-            ),
+           ),
           ),
         ],
       ),
     );
   }
 
-  @override
+  @@override
   void dispose() {
     _searchController.dispose();
     super.dispose();
