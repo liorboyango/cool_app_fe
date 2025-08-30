@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedRole;
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
-  int? _selectedUserId;
+  Set<int> _selectedUserIds = {};
 
   @override
   void initState() {
@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}'; 
+          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
         });
       } else {
         setState(() {
@@ -113,8 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       setState(() {
-          _users = [];
-          _displayedUsers = [];
+        _users = [];
+        _displayedUsers = [];
       });
     }
   }
@@ -134,9 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     setState(() {
       _displayedUsers = filtered;
-      if (_selectedUserId != null && !filtered.any((u) => u['id'] == _selectedUserId)) {
-        _selectedUserId = null;
-      }
+      _selectedUserIds.removeWhere((id) => !_displayedUsers.any((u) => u['id'] == id));
     });
   }
 
@@ -146,11 +144,35 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         await _fetchUsers();
         setState(() {
-          _selectedUserId = null;
+          _selectedUserIds.remove(id);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to delete user')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteUsers(List<int> ids) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://localhost:3000/api/users'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'ids': ids}),
+      );
+      if (response.statusCode == 200) {
+        await _fetchUsers();
+        setState(() {
+          _selectedUserIds.clear();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete users')),
         );
       }
     } catch (e) {
@@ -179,6 +201,34 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _deleteUser(user['id']);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteSelected() {
+    final selectedUsers = _displayedUsers.where((u) => _selectedUserIds.contains(u['id'])).toList();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Bulk Deletion'),
+          content: Text('Are you sure you want to delete ${selectedUsers.length} users?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Delete'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
             ),
           ],
@@ -265,6 +315,14 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
+          if (_selectedUserIds.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: ElevatedButton(
+                onPressed: _confirmDeleteSelected,
+                child: Text('Delete Selected (${_selectedUserIds.length})'),
+              ),
+            ),
           Container(
             padding: const EdgeInsets.all(16.0),
             child: Text('Users:', style: theme.textTheme.headlineSmall),
@@ -274,23 +332,38 @@ class _MyHomePageState extends State<MyHomePage> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _displayedUsers.length,
             itemBuilder: (context, index) => ListTile(
+              leading: Checkbox(
+                value: _selectedUserIds.contains(_displayedUsers[index]['id']),
+                onChanged: (bool? value) {
+                  setState(() {
+                    final id = _displayedUsers[index]['id'];
+                    if (value == true) {
+                      _selectedUserIds.add(id);
+                    } else {
+                      _selectedUserIds.remove(id);
+                    }
+                  });
+                },
+              ),
               title: Text(
                 _displayedUsers[index]['name'],
-                style: _displayedUsers[index]['id'] == _selectedUserId
-                    ? const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)
+                style: _selectedUserIds.contains(_displayedUsers[index]['id'])
+                    ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
               subtitle: Text('Role: ${_displayedUsers[index]['role']}'),
-              trailing: _displayedUsers[index]['id'] == _selectedUserId
-                  ? IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () => _confirmDelete(_displayedUsers[index]),
-                    )
-                  : null,
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => _confirmDelete(_displayedUsers[index]),
+              ),
               onTap: () {
                 setState(() {
-                  final userId = _displayedUsers[index]['id'];
-                  _selectedUserId = (_selectedUserId == userId) ? null : userId;
+                  final id = _displayedUsers[index]['id'];
+                  if (_selectedUserIds.contains(id)) {
+                    _selectedUserIds.remove(id);
+                  } else {
+                    _selectedUserIds.add(id);
+                  }
                 });
               },
             ),
