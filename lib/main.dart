@@ -125,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
       filtered = filtered.where((u) => u['role'] == _selectedRole).toList();
     }
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()) || (u['email'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
     }
     filtered.sort((a, b) {
       final roleComp = (a['role'] as String).compareTo(b['role']);
@@ -237,6 +237,85 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> _showUserDialog({Map<String, dynamic>? user}) async {
+    final nameController = TextEditingController(text: user?['name'] ?? '');
+    final roleController = TextEditingController(text: user?['role'] ?? '');
+    final emailController = TextEditingController(text: user?['email'] ?? '');
+    final isEdit = user != null;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isEdit ? 'Edit User' : 'Add User'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: roleController,
+                decoration: const InputDecoration(labelText: 'Role'),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(isEdit ? 'Update' : 'Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      final name = nameController.text.trim();
+      final role = roleController.text.trim();
+      final email = emailController.text.trim();
+      if (name.isEmpty || role.isEmpty || email.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All fields are required')),
+        );
+        return;
+      }
+      try {
+        final body = json.encode({'name': name, 'role': role, 'email': email});
+        final url = isEdit ? 'http://localhost:3000/api/users/${user!['id']}' : 'http://localhost:3000/api/users';
+        final method = isEdit ? http.put : http.post;
+        final response = await method(
+          Uri.parse(url),
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          await _fetchUsers();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to save user')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -277,7 +356,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                labelText: 'Search by name',
+                labelText: 'Search by name or email',
                 border: OutlineInputBorder(),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -351,10 +430,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () => _confirmDelete(_displayedUsers[index]),
+              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _confirmDelete(_displayedUsers[index]),
+                  ),
+                ],
               ),
               onTap: () {
                 setState(() {
@@ -369,6 +457,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showUserDialog(),
+        child: const Icon(Icons.add),
       ),
     );
   }
