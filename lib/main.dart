@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -316,6 +317,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Color _getRoleColor(String role) {
+    if (role == 'admin') return Colors.red;
+    if (role == 'user') return Colors.green;
+    return Colors.yellow;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -430,7 +437,33 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: Row(
+                children: [
+                  const Text('Role: '),
+                  Text(
+                    _displayedUsers[index]['role'],
+                    style: TextStyle(color: _getRoleColor(_displayedUsers[index]['role'])),
+                  ),
+                  const Text(', Email: '),
+                  InkWell(
+                    child: Text(
+                      _displayedUsers[index]['email'],
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
+                    onTap: () async {
+                      final email = _displayedUsers[index]['email'];
+                      final Uri emailUri = Uri(scheme: 'mailto', path: email);
+                      if (await canLaunchUrl(emailUri)) {
+                        await launchUrl(emailUri);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Cannot open email client')),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
