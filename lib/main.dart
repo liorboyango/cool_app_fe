@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -58,6 +59,28 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
+
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red;
+      case 'user':
+        return Colors.green;
+      default:
+        return Colors.yellow;
+    }
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final Uri emailUri = Uri(scheme: 'mailto', path: email);
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch email client')),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -430,7 +453,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Role: '),
+                  Text(
+                    _displayedUsers[index]['role'],
+                    style: TextStyle(color: _getRoleColor(_displayedUsers[index]['role'])),
+                  ),
+                  const Text(', Email: '),
+                  GestureDetector(
+                    onTap: () => _launchEmail(_displayedUsers[index]['email']),
+                    child: Text(
+                      _displayedUsers[index]['email'],
+                      style: const TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
