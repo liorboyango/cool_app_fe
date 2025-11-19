@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -258,8 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
               TextField(
                 controller: roleController,
                 decoration: const InputDecoration(labelText: 'Role'),
-              ),
-              TextField(
+              ),n              TextField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: 'Email'),
               ),
@@ -313,6 +313,17 @@ class _MyHomePageState extends State<MyHomePage> {
           SnackBar(content: Text('Error: $e')),
         );
       }
+    }
+  }
+
+  Color getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red;
+      case 'user':
+        return Colors.green;
+      default:
+        return Colors.yellow;
     }
   }
 
@@ -430,7 +441,23 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: Row(
+                children: [
+                  const Text('Role: '),
+                  Text(
+                    _displayedUsers[index]['role'],
+                    style: TextStyle(color: getRoleColor(_displayedUsers[index]['role'])),
+                  ),
+                  const Text(', Email: '),
+                  GestureDetector(
+                    onTap: () => launchUrl(Uri.parse('mailto:${_displayedUsers[index]['email']}')),
+                    child: Text(
+                      _displayedUsers[index]['email'],
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
