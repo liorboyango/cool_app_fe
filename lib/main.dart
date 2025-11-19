@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -114,8 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       setState(() {
         _users = [];
-        _displayedUsers = [];
-      });
+          _displayedUsers = [];
+        }
     }
   }
 
@@ -316,6 +318,28 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red;
+      case 'user':
+        return Colors.green;
+      default:
+        return Colors.yellow;
+    }
+  }
+
+  Future<void> _launchEmail(String email) async {
+    final Uri emailUri = Uri(scheme: 'mailto', path: email);
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cannot open email client')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -430,7 +454,24 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: RichText(
+                text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: [
+                    const TextSpan(text: 'Role: '),
+                    TextSpan(
+                      text: _displayedUsers[index]['role'],
+                      style: TextStyle(color: _getRoleColor(_displayedUsers[index]['role'])),
+                    ),
+                    const TextSpan(text: ', Email: '),
+                    TextSpan(
+                      text: _displayedUsers[index]['email'],
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()..onTap = () => _launchEmail(_displayedUsers[index]['email']),
+                    ),
+                  ],
+                ),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
