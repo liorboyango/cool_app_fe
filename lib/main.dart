@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/gestures.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -71,6 +73,17 @@ class _MyHomePageState extends State<MyHomePage> {
   void _updateSearchQuery() {
     _searchQuery = _searchController.text;
     _updateDisplayedUsers();
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return Colors.red;
+      case 'user':
+        return Colors.green;
+      default:
+        return Colors.yellow;
+    }
   }
 
   Future<void> _fetchServerStatus() async {
@@ -430,7 +443,26 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: RichText(
+                text: TextSpan(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  children: [
+                    const TextSpan(text: 'Role: '),
+                    TextSpan(
+                      text: _displayedUsers[index]['role'],
+                      style: TextStyle(color: _getRoleColor(_displayedUsers[index]['role'])),
+                    ),
+                    const TextSpan(text: ', Email: '),
+                    TextSpan(
+                      text: _displayedUsers[index]['email'],
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                      recognizer: TapGestureRecognizer()..onTap = () {
+                        launchUrl(Uri(scheme: 'mailto', path: _displayedUsers[index]['email']));
+                      },
+                    ),
+                  ],
+                ),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
