@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -397,11 +399,11 @@ class _MyHomePageState extends State<MyHomePage> {
           if (_selectedUserIds.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ElevatedButton(
-                onPressed: _confirmDeleteSelected,
-                child: Text('Delete Selected (${_selectedUserIds.length})'),
-              ),
+            child: ElevatedButton(
+              onPressed: _confirmDeleteSelected,
+              child: Text('Delete Selected (${_selectedUserIds.length})'),
             ),
+          ),
           Container(
             padding: const EdgeInsets.all(16.0),
             child: Text('Users:', style: theme.textTheme.headlineSmall),
@@ -410,51 +412,88 @@ class _MyHomePageState extends State<MyHomePage> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => ListTile(
-              leading: Checkbox(
-                value: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                onChanged: (bool? value) {
+            itemBuilder: (context, index) {
+              final user = _displayedUsers[index];
+              final role = user['role'] as String;
+              final email = user['email'] as String;
+              return ListTile(
+                leading: Checkbox(
+                  value: _selectedUserIds.contains(user['id']),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      final id = user['id'];
+                      if (value == true) {
+                        _selectedUserIds.add(id);
+                      } else {
+                        _selectedUserIds.remove(id);
+                      }
+                    });
+                  },
+                ),
+                title: Text(
+                  user['name'],
+                  style: _selectedUserIds.contains(user['id'])
+                      ? const TextStyle(fontWeight: FontWeight.bold)
+                      : null,
+                ),
+                subtitle: RichText(
+                  text: TextSpan(
+                    style: DefaultTextStyle.of(context).style,
+                    children: [
+                      const TextSpan(text: 'Role: '),
+                      TextSpan(
+                        text: role,
+                        style: TextStyle(
+                          color: role == 'admin' ? Colors.red : role == 'user' ? Colors.green : Colors.yellow,
+                        ),
+                      ),
+                      const TextSpan(text: ', Email: '),
+                      TextSpan(
+                        text: email,
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            final Uri emailUri = Uri(scheme: 'mailto', path: email);
+                            if (await canLaunchUrl(emailUri)) {
+                              await launchUrl(emailUri);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Cannot launch email client')),
+                              );
+                            }
+                          },
+                      ),
+                    ],
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () => _showUserDialog(user: user),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => _confirmDelete(user),
+                    ),
+                  ],
+                ),
+                onTap: () {
                   setState(() {
-                    final id = _displayedUsers[index]['id'];
-                    if (value == true) {
-                      _selectedUserIds.add(id);
-                    } else {
+                    final id = user['id'];
+                    if (_selectedUserIds.contains(id)) {
                       _selectedUserIds.remove(id);
+                    } else {
+                      _selectedUserIds.add(id);
                     }
                   });
                 },
-              ),
-              title: Text(
-                _displayedUsers[index]['name'],
-                style: _selectedUserIds.contains(_displayedUsers[index]['id'])
-                    ? const TextStyle(fontWeight: FontWeight.bold)
-                    : null,
-              ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _confirmDelete(_displayedUsers[index]),
-                  ),
-                ],
-              ),
-              onTap: () {
-                setState(() {
-                  final id = _displayedUsers[index]['id'];
-                  if (_selectedUserIds.contains(id)) {
-                    _selectedUserIds.remove(id);
-                  } else {
-                    _selectedUserIds.add(id);
-                  }
-                });
-              },
-            ),
+              );
+            },
           ),
         ],
       ),
