@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
@@ -32,8 +33,7 @@ class MyApp extends StatelessWidget {
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
             useMaterial3: true,
-          ),
-          themeMode: themeNotifier.themeMode,
+          ),n          themeMode: themeNotifier.themeMode,
           home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
         );
       },
@@ -316,6 +316,17 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.red;
+      case 'user':
+        return Colors.green;
+      default:
+        return Colors.yellow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -430,7 +441,31 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? const TextStyle(fontWeight: FontWeight.bold)
                     : null,
               ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Role: ${_displayedUsers[index]['role']}',
+                    style: TextStyle(color: _getRoleColor(_displayedUsers[index]['role'])),
+                  ),
+                  InkWell(
+                    onTap: () async {
+                      final email = _displayedUsers[index]['email'];
+                      final Uri emailLaunchUri = Uri(
+                        scheme: 'mailto',
+                        path: email,
+                      );
+                      if (await canLaunchUrl(emailLaunchUri)) {
+                        await launchUrl(emailLaunchUri);
+                      }
+                    },
+                    child: Text(
+                      _displayedUsers[index]['email'],
+                      style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
+                    ),
+                  ),
+                ],
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
