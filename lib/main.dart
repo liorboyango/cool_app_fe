@@ -26,11 +26,11 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Coolest App Ever',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), useMaterial3: true), // Vibrant purple
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), brightness: Brightness.dark, useMaterial3: true),
             useMaterial3: true,
           ),
           themeMode: themeNotifier.themeMode,
@@ -187,6 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          icon: Icon(Icons.warning, color: Colors.orange),
           title: const Text('Confirm Deletion'),
           content: Text('Are you sure you want to delete ${user['name']} forever?'),
           actions: <Widget>[
@@ -196,12 +197,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
+            ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _deleteUser(user['id']);
               },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             ),
           ],
         );
@@ -215,6 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          icon: Icon(Icons.warning, color: Colors.orange),
           title: const Text('Confirm Bulk Deletion'),
           content: Text('Are you sure you want to delete ${selectedUsers.length} users?'),
           actions: <Widget>[
@@ -224,12 +227,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
+            ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
                 await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             ),
           ],
         );
@@ -247,21 +251,22 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isEdit ? 'Edit User' : 'Add User'),
+        icon: Icon(isEdit ? Icons.edit : Icons.add, color: Theme.of(context).colorScheme.primary),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name', prefixIcon: Icon(Icons.person)),
               ),
               TextField(
                 controller: roleController,
-                decoration: const InputDecoration(labelText: 'Role'),
+                decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.work)),
               ),
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
               ),
             ],
           ),
@@ -271,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(isEdit ? 'Update' : 'Add'),
           ),
@@ -324,6 +329,15 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.purple, Colors.indigo],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -337,130 +351,185 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: ListView(
-        children: [
-          Center(child: Text(_status, style: theme.textTheme.headlineSmall)),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: theme.brightness == Brightness.dark
+                ? [Color(0xFF121212), Color(0xFF1E1E1E)]
+                : [Color(0xFFF3E5F5), Color(0xFFE1BEE7)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: ListView(
+          padding: EdgeInsets.all(16.0),
+          children: [
+            Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: theme.colorScheme.primary),
+                    SizedBox(width: 16),
+                    Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
-                const SizedBox(width: 16.0),
-                ElevatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
+                ElevatedButton.icon(
+                  onPressed: _fetchServerStatus,
+                  icon: Icon(Icons.refresh),
+                  label: Text('Refresh Status'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: _fetchUsers,
+                  icon: Icon(Icons.people),
+                  label: Text('Refresh Users'),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Search by name or email',
-                border: OutlineInputBorder(),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: DropdownButton<String?>(
-              value: _selectedRole,
-              hint: const Text('Filter by role'),
-              isExpanded: true,
-              items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text('All'),
+            SizedBox(height: 16),
+            Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        labelText: 'Search by name or email',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(Icons.clear),
+                                onPressed: () => _searchController.clear(),
+                              )
+                            : null,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<String?>(
+                      value: _selectedRole,
+                      decoration: InputDecoration(
+                        labelText: 'Filter by role',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        prefixIcon: Icon(Icons.filter_list),
+                      ),
+                      items: <DropdownMenuItem<String?>>[
+                        DropdownMenuItem<String?>(
+                          value: null,
+                          child: Text('All'),
+                        ),
+                      ] + roles.map<DropdownMenuItem<String?>>((String role) {
+                        return DropdownMenuItem<String?>(
+                          value: role,
+                          child: Text(role),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedRole = newValue;
+                          _updateDisplayedUsers();
+                        });
+                      },
+                    ),
+                  ],
                 ),
-              ] + roles.map<DropdownMenuItem<String?>>((String role) {
-                return DropdownMenuItem<String?>(
-                  value: role,
-                  child: Text(role),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedRole = newValue;
-                  _updateDisplayedUsers();
-                });
-              },
+              ),
             ),
-          ),
-          if (_selectedUserIds.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ElevatedButton(
+            if (_selectedUserIds.isNotEmpty) ...[
+              SizedBox(height: 16),
+              ElevatedButton.icon(
                 onPressed: _confirmDeleteSelected,
-                child: Text('Delete Selected (${_selectedUserIds.length})'),
+                icon: Icon(Icons.delete_forever),
+                label: Text('Delete Selected (${_selectedUserIds.length})'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+            SizedBox(height: 16),
+            Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _displayedUsers.length,
+              itemBuilder: (context, index) => Card(
+                elevation: 4,
+                margin: EdgeInsets.only(bottom: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.primary,
+                    child: Text(
+                      _displayedUsers[index]['name'][0].toUpperCase(),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  title: Text(
+                    _displayedUsers[index]['name'],
+                    style: TextStyle(
+                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
+                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
+                    ),
+                  ),
+                  subtitle: Text('Role: ${_displayedUsers[index]['role']}
+Email: ${_displayedUsers[index]['email']}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _showUserDialog(user: _displayedUsers[index]),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _confirmDelete(_displayedUsers[index]),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    setState(() {
+                      final id = _displayedUsers[index]['id'];
+                      if (_selectedUserIds.contains(id)) {
+                        _selectedUserIds.remove(id);
+                      } else {
+                        _selectedUserIds.add(id);
+                      }
+                    });
+                  },
+                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
+                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Users:', style: theme.textTheme.headlineSmall),
-          ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => ListTile(
-              leading: Checkbox(
-                value: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                onChanged: (bool? value) {
-                  setState(() {
-                    final id = _displayedUsers[index]['id'];
-                    if (value == true) {
-                      _selectedUserIds.add(id);
-                    } else {
-                      _selectedUserIds.remove(id);
-                    }
-                  });
-                },
-              ),
-              title: Text(
-                _displayedUsers[index]['name'],
-                style: _selectedUserIds.contains(_displayedUsers[index]['id'])
-                    ? const TextStyle(fontWeight: FontWeight.bold)
-                    : null,
-              ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _confirmDelete(_displayedUsers[index]),
-                  ),
-                ],
-              ),
-              onTap: () {
-                setState(() {
-                  final id = _displayedUsers[index]['id'];
-                  if (_selectedUserIds.contains(id)) {
-                    _selectedUserIds.remove(id);
-                  } else {
-                    _selectedUserIds.add(id);
-                  }
-                });
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserDialog(),
-        child: const Icon(Icons.add),
+        icon: Icon(Icons.add),
+        label: Text('Add User'),
+        backgroundColor: theme.colorScheme.primary,
       ),
     );
   }
