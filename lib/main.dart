@@ -26,11 +26,11 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Coolest App Ever',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), useMaterial3: true), // Vibrant purple
+            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0)), // Vibrant purple
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), brightness: Brightness.dark, useMaterial3: true),
+            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), brightness: Brightness.dark),
             useMaterial3: true,
           ),
           themeMode: themeNotifier.themeMode,
@@ -491,8 +491,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
                     ),
                   ),
-                  subtitle: Text('Role: ${_displayedUsers[index]['role']}
-Email: ${_displayedUsers[index]['email']}'),
+                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
