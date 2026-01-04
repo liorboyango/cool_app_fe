@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
+import 'app_config/constants.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 
@@ -76,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _fetchServerStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:3000/api/status'),
+        Uri.parse('${Constants.webServiceBaseUrl}/api/status'),
       );
 
       if (response.statusCode == 200) {
@@ -98,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _fetchUsers() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:3000/api/users'));
+      final response = await http.get(Uri.parse('${Constants.webServiceBaseUrl}/api/users'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -140,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _deleteUser(int id) async {
     try {
-      final response = await http.delete(Uri.parse('http://localhost:3000/api/users/$id'));
+      final response = await http.delete(Uri.parse('${Constants.webServiceBaseUrl}/api/users/$id'));
       if (response.statusCode == 200) {
         await _fetchUsers();
         setState(() {
@@ -161,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _deleteUsers(List<int> ids) async {
     try {
       final response = await http.delete(
-        Uri.parse('http://localhost:3000/api/users'),
+        Uri.parse('${Constants.webServiceBaseUrl}/api/users'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'ids': ids}),
       );
@@ -296,7 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       try {
         final body = json.encode({'name': name, 'role': role, 'email': email});
-        final url = isEdit ? 'http://localhost:3000/api/users/${user!['id']}' : 'http://localhost:3000/api/users';
+        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
           Uri.parse(url),
