@@ -26,12 +26,28 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Coolest App Ever',
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
             useMaterial3: true,
+            cardTheme: CardTheme(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.teal.shade700,
+              foregroundColor: Colors.white,
+            ),
           ),
           darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal, brightness: Brightness.dark),
             useMaterial3: true,
+            cardTheme: CardTheme(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.teal.shade900,
+              foregroundColor: Colors.white,
+            ),
           ),
           themeMode: themeNotifier.themeMode,
           home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
@@ -50,7 +66,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   String _status = 'Fetching...';
   List<dynamic> _users = [];
   String _searchQuery = '';
@@ -58,6 +74,11 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
+  bool _isLoadingStatus = false;
+  bool _isLoadingUsers = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   @override
   void initState() {
@@ -66,6 +87,16 @@ class _MyHomePageState extends State<MyHomePage> {
     _searchController.addListener(_updateSearchQuery);
     _fetchServerStatus();
     _fetchUsers();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+    _animationController.forward();
   }
 
   void _updateSearchQuery() {
@@ -74,6 +105,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchServerStatus() async {
+    setState(() {
+      _isLoadingStatus = true;
+    });
     try {
       final response = await http.get(
         Uri.parse('http://localhost:3000/api/status'),
@@ -82,21 +116,28 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
+          _status = 'Server is ${data['status']}';
         });
       } else {
         setState(() {
-          _status = 'Server error: ${response.statusCode}';
+          _status = 'Server offline';
         });
       }
     } catch (e) {
       setState(() {
-        _status = 'Error: $e';
+        _status = 'Connection failed';
+      });
+    } finally {
+      setState(() {
+        _isLoadingStatus = false;
       });
     }
   }
 
   Future<void> _fetchUsers() async {
+    setState(() {
+      _isLoadingUsers = true;
+    });
     try {
       final response = await http.get(Uri.parse('http://localhost:3000/api/users'));
       if (response.statusCode == 200) {
@@ -115,6 +156,10 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _users = [];
         _displayedUsers = [];
+      });
+    } finally {
+      setState(() {
+        _isLoadingUsers = false;
       });
     }
   }
@@ -316,13 +361,30 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  String _getInitials(String name) {
+    final parts = name.split(' ');
+    return parts.length > 1 ? '${parts[0][0]}${parts[1][0]}' : name[0];
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return Colors.redAccent;
+      case 'user':
+        return Colors.blueAccent;
+      case 'moderator':
+        return Colors.greenAccent;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
         actions: [
           IconButton(
@@ -337,130 +399,202 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: ListView(
-        children: [
-          Center(child: Text(_status, style: theme.textTheme.headlineSmall)),
-          Padding(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.colorScheme.surface,
+              theme.colorScheme.surfaceVariant.withOpacity(0.5),
+            ],
+          ),
+        ),
+        child: FadeTransition(
+          opacity: _animation,
+          child: ListView(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(onPressed: _fetchServerStatus, child: const Text('Refresh Status')),
-                const SizedBox(width: 16.0),
-                ElevatedButton(onPressed: _fetchUsers, child: const Text('Refresh Users')),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Search by name or email',
-                border: OutlineInputBorder(),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: DropdownButton<String?>(
-              value: _selectedRole,
-              hint: const Text('Filter by role'),
-              isExpanded: true,
-              items: <DropdownMenuItem<String?>>[
-                const DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text('All'),
-                ),
-              ] + roles.map<DropdownMenuItem<String?>>((String role) {
-                return DropdownMenuItem<String?>(
-                  value: role,
-                  child: Text(role),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedRole = newValue;
-                  _updateDisplayedUsers();
-                });
-              },
-            ),
-          ),
-          if (_selectedUserIds.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: ElevatedButton(
-                onPressed: _confirmDeleteSelected,
-                child: Text('Delete Selected (${_selectedUserIds.length})'),
-              ),
-            ),
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Users:', style: theme.textTheme.headlineSmall),
-          ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => ListTile(
-              leading: Checkbox(
-                value: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                onChanged: (bool? value) {
-                  setState(() {
-                    final id = _displayedUsers[index]['id'];
-                    if (value == true) {
-                      _selectedUserIds.add(id);
-                    } else {
-                      _selectedUserIds.remove(id);
-                    }
-                  });
-                },
-              ),
-              title: Text(
-                _displayedUsers[index]['name'],
-                style: _selectedUserIds.contains(_displayedUsers[index]['id'])
-                    ? const TextStyle(fontWeight: FontWeight.bold)
-                    : null,
-              ),
-              subtitle: Text('Role: ${_displayedUsers[index]['role']}, Email: ${_displayedUsers[index]['email']}'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
+            children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isLoadingStatus ? Icons.hourglass_empty : Icons.cloud_done,
+                        color: _isLoadingStatus ? Colors.orange : Colors.green,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _status,
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                      if (_isLoadingStatus)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () => _confirmDelete(_displayedUsers[index]),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoadingStatus ? null : _fetchServerStatus,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Refresh Status'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoadingUsers ? null : _fetchUsers,
+                      icon: const Icon(Icons.sync),
+                      label: const Text('Refresh Users'),
+                    ),
                   ),
                 ],
               ),
-              onTap: () {
-                setState(() {
-                  final id = _displayedUsers[index]['id'];
-                  if (_selectedUserIds.contains(id)) {
-                    _selectedUserIds.remove(id);
-                  } else {
-                    _selectedUserIds.add(id);
-                  }
-                });
-              },
-            ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search by name or email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String?>(
+                value: _selectedRole,
+                decoration: const InputDecoration(
+                  labelText: 'Filter by role',
+                  border: OutlineInputBorder(),
+                ),
+                items: <DropdownMenuItem<String?>>[
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('All'),
+                  ),
+                ] + roles.map<DropdownMenuItem<String?>>((String role) {
+                  return DropdownMenuItem<String?>(
+                    value: role,
+                    child: Text(role),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedRole = newValue;
+                    _updateDisplayedUsers();
+                  });
+                },
+              ),
+              if (_selectedUserIds.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: ElevatedButton.icon(
+                    onPressed: _confirmDeleteSelected,
+                    icon: const Icon(Icons.delete_sweep),
+                    label: Text('Delete Selected (${_selectedUserIds.length})'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Text(
+                    'Users:',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_isLoadingUsers)
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _displayedUsers.length,
+                itemBuilder: (context, index) {
+                  final user = _displayedUsers[index];
+                  final isSelected = _selectedUserIds.contains(user['id']);
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: _getRoleColor(user['role']),
+                        child: Text(
+                          _getInitials(user['name']),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      title: Text(
+                        user['name'],
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          color: isSelected ? theme.colorScheme.primary : null,
+                        ),
+                      ),
+                      subtitle: Text('Role: ${user['role']}\nEmail: ${user['email']}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showUserDialog(user: user),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _confirmDelete(user),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        setState(() {
+                          final id = user['id'];
+                          if (_selectedUserIds.contains(id)) {
+                            _selectedUserIds.remove(id);
+                          } else {
+                            _selectedUserIds.add(id);
+                          }
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showUserDialog(),
         child: const Icon(Icons.add),
+        tooltip: 'Add User',
       ),
     );
   }
@@ -468,6 +602,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 }
