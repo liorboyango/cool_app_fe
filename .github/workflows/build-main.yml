@@ -1,0 +1,29 @@
+name: Build on push to main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run codegen and build (WASM)
+        run: |
+          set -e
+          dart run build_runner build -d
+          flutter gen-l10
+          flutter build web --wasm
