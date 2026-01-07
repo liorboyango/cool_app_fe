@@ -17,6 +17,9 @@ class SettingsScreen extends StatelessWidget {
         children: [
           ListTile(
             title: const Text('Dark Theme'),
+            onTap: () {
+              Provider.of<ThemeNotifier>(context, listen: false).toggleTheme();
+            },
             trailing: Consumer<ThemeNotifier>(
               builder: (context, themeNotifier, child) {
                 return ThemeToggle(
