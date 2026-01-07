@@ -54,4 +54,22 @@ void main() {
     expect(find.text('Settings'), findsOneWidget);
     expect(find.text('Dark Theme'), findsOneWidget);
   });
+
+  testWidgets('Tapping dark theme tile toggles theme', (WidgetTester tester) async {
+    final themeNotifier = ThemeNotifier();
+    await tester.pumpWidget(ChangeNotifierProvider(
+      create: (_) => themeNotifier,
+      child: const MyApp(),
+    ));
+
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
+
+    expect(themeNotifier.themeMode, ThemeMode.light);
+
+    await tester.tap(find.text('Dark Theme'));
+    await tester.pump();
+
+    expect(themeNotifier.themeMode, ThemeMode.dark);
+  });
 }
