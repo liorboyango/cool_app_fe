@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ThemeToggle extends StatefulWidget {
   final bool isDark;
-  final Function(bool) onToggle;
+  final Function() onToggle;
 
   const ThemeToggle({
     super.key,
@@ -32,11 +32,7 @@ class _ThemeToggleState extends State<ThemeToggle> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        _isDark = !_isDark;
-        widget.onToggle(_isDark);
-        setState(() {});
-      },
+      onTap: widget.onToggle,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 70,
