@@ -15,16 +15,17 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          ListTile(
-            title: const Text('Dark Theme'),
-            trailing: Consumer<ThemeNotifier>(
-              builder: (context, themeNotifier, child) {
-                return ThemeToggle(
+          Consumer<ThemeNotifier>(
+            builder: (context, themeNotifier, child) {
+              return ListTile(
+                title: const Text('Dark Theme'),
+                onTap: () => themeNotifier.toggleTheme(themeNotifier.themeMode != ThemeMode.dark),
+                trailing: ThemeToggle(
                   isDark: themeNotifier.themeMode == ThemeMode.dark,
                   onToggle: themeNotifier.toggleTheme,
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
