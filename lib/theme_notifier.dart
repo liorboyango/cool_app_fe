@@ -9,4 +9,9 @@ class ThemeNotifier extends ChangeNotifier {
     _themeMode = isOn ? ThemeMode.dark : ThemeMode.light;
     notifyListeners();
   }
+
+  void toggle() {
+    _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    notifyListeners();
+  }
 }
