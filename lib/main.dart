@@ -242,6 +242,35 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<bool> _confirmDeleteSwipe(dynamic user) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: Icon(Icons.warning, color: Colors.orange),
+          title: const Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete ${user['name']} forever?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Delete'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   Future<void> _showUserDialog({Map<String, dynamic>? user}) async {
     final nameController = TextEditingController(text: user?['name'] ?? '');
     final roleController = TextEditingController(text: user?['role'] ?? '');
@@ -473,52 +502,61 @@ class _MyHomePageState extends State<MyHomePage> {
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
               itemCount: _displayedUsers.length,
-              itemBuilder: (context, index) => Card(
-                elevation: 4,
-                margin: EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      _displayedUsers[index]['name'][0].toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    _displayedUsers[index]['name'],
-                    style: TextStyle(
-                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
-                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
-                    ),
-                  ),
-                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _confirmDelete(_displayedUsers[index]),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    setState(() {
-                      final id = _displayedUsers[index]['id'];
-                      if (_selectedUserIds.contains(id)) {
-                        _selectedUserIds.remove(id);
-                      } else {
-                        _selectedUserIds.add(id);
-                      }
-                    });
-                  },
-                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+              itemBuilder: (context, index) => Dismissible(
+                key: Key(_displayedUsers[index]['id'].toString()),
+                direction: DismissDirection.horizontal,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 20),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                secondaryBackground: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(left: 20),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                confirmDismiss: (direction) async => await _confirmDeleteSwipe(_displayedUsers[index]),
+                onDismissed: (direction) => _deleteUser(_displayedUsers[index]['id']),
+                child: Card(
+                  elevation: 4,
+                  margin: EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.primary,
+                      child: Text(
+                        _displayedUsers[index]['name'][0].toUpperCase(),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    title: Text(
+                      _displayedUsers[index]['name'],
+                      style: TextStyle(
+                        fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
+                        color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
+                      ),
+                    ),
+                    subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showUserDialog(user: _displayedUsers[index]),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        final id = _displayedUsers[index]['id'];
+                        if (_selectedUserIds.contains(id)) {
+                          _selectedUserIds.remove(id);
+                        } else {
+                          _selectedUserIds.add(id);
+                        }
+                      });
+                    },
+                    selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
+                    selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
             ),
