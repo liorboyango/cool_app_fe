@@ -183,35 +183,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _confirmDelete(dynamic user) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
-          title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete ${user['name']} forever?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              child: const Text('Delete'),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                await _deleteUser(user['id']);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _confirmDeleteSelected() {
     final selectedUsers = _displayedUsers.where((u) => _selectedUserIds.contains(u['id'])).toList();
     showDialog(
@@ -362,8 +333,7 @@ class _MyHomePageState extends State<MyHomePage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-          ),
-        ),
+          ),n        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -501,8 +471,13 @@ class _MyHomePageState extends State<MyHomePage> {
               itemBuilder: (context, index) => Dismissible(
                 key: Key(_displayedUsers[index]['id'].toString()),
                 direction: DismissDirection.horizontal,
-                confirmDismiss: (direction) => _confirmDeleteSwipe(_displayedUsers[index]),
-                onDismissed: (direction) => _deleteUser(_displayedUsers[index]['id']),
+                confirmDismiss: (direction) async {
+                  final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
+                  if (confirmed) {
+                    await _deleteUser(_displayedUsers[index]['id']);
+                  }
+                  return false;
+                },
                 background: Container(
                   color: Colors.red,
                   alignment: Alignment.centerLeft,
