@@ -333,7 +333,8 @@ class _MyHomePageState extends State<MyHomePage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-          ),n        ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
