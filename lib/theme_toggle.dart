@@ -18,7 +18,7 @@ class ThemeToggle extends StatelessWidget {
       height: 34,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: isDark ? Colors.grey[800] : Colors.yellow[100],
+        color: isDark ? Colors.grey[600] : Colors.grey[200],
       ),
       child: Stack(
         children: [
@@ -44,7 +44,7 @@ class ThemeToggle extends StatelessWidget {
               opacity: isDark ? 0.5 : 1.0,
               child: const Icon(
                 Icons.wb_sunny,
-                color: Colors.orange,
+                color: Color(0xFFFFD700), // Muted gold
                 size: 24,
               ),
             ),
@@ -57,7 +57,7 @@ class ThemeToggle extends StatelessWidget {
               opacity: isDark ? 1.0 : 0.5,
               child: const Icon(
                 Icons.nightlight_round,
-                color: Colors.blueGrey,
+                color: Color(0xFF87CEEB), // Sky blue
                 size: 24,
               ),
             ),
