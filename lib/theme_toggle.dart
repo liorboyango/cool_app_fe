@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_config/app_colors.dart';
+
 class ThemeToggle extends StatelessWidget {
   final bool isDark;
   final Function(bool) onToggle;
@@ -18,7 +20,7 @@ class ThemeToggle extends StatelessWidget {
       height: 34,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: isDark ? Colors.grey[800] : Colors.yellow[100],
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurfaceVariant,
       ),
       child: Stack(
         children: [
@@ -42,9 +44,9 @@ class ThemeToggle extends StatelessWidget {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: isDark ? 0.5 : 1.0,
-              child: const Icon(
+              child: Icon(
                 Icons.wb_sunny,
-                color: Colors.orange,
+                color: AppColors.lightWarning,
                 size: 24,
               ),
             ),
@@ -55,9 +57,9 @@ class ThemeToggle extends StatelessWidget {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: isDark ? 1.0 : 0.5,
-              child: const Icon(
+              child: Icon(
                 Icons.nightlight_round,
-                color: Colors.blueGrey,
+                color: AppColors.darkPrimary,
                 size: 24,
               ),
             ),
