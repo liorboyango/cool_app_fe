@@ -179,12 +179,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _confirmDeleteSelected() {
-    final selectedUsers = _displayedUsers.where((u) => _selectedUserIds.contains(u['id'])).toList();
+    final theme = Theme.of(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Bulk Deletion'),
           content: Text('Are you sure you want to delete ${selectedUsers.length} users?'),
           actions: <Widget>[
@@ -200,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
                 await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
         );
@@ -209,11 +209,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<bool> _confirmDeleteSwipe(dynamic user) async {
+    final theme = Theme.of(context);
     bool? result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Deletion'),
           content: Text('Are you sure you want to delete ${user['name']} forever?'),
           actions: <Widget>[
@@ -224,7 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               child: const Text('Delete'),
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
         );
@@ -325,8 +326,6 @@ class _MyHomePageState extends State<MyHomePage> {
         padding: EdgeInsets.all(16.0),
         children: [
           Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
@@ -346,25 +345,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: _fetchServerStatus,
                 icon: Icon(Icons.refresh),
                 label: Text('Refresh Status'),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
               ),
               SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: _fetchUsers,
                 icon: Icon(Icons.people),
                 label: Text('Refresh Users'),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
               ),
             ],
           ),
           SizedBox(height: 16),
           Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: EdgeInsets.all(16.0),
               child: Column(
@@ -373,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       labelText: 'Search by name or email',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       prefixIcon: Icon(Icons.search),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
@@ -388,7 +379,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     value: _selectedRole,
                     decoration: InputDecoration(
                       labelText: 'Filter by role',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       prefixIcon: Icon(Icons.filter_list),
                     ),
                     items: <DropdownMenuItem<String?>>[
@@ -419,10 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _confirmDeleteSelected,
               icon: Icon(Icons.delete_forever),
               label: Text('Delete Selected (${_selectedUserIds.length})'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
           SizedBox(height: 16),
@@ -443,21 +431,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 return false;
               },
               background: Container(
-                color: Colors.red,
+                color: theme.colorScheme.error,
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.only(left: 20),
                 child: Icon(Icons.delete, color: Colors.white),
               ),
               secondaryBackground: Container(
-                color: Colors.red,
+                color: theme.colorScheme.error,
                 alignment: Alignment.centerRight,
                 padding: EdgeInsets.only(right: 20),
                 child: Icon(Icons.delete, color: Colors.white),
               ),
               child: Card(
-                elevation: 4,
-                margin: EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: theme.colorScheme.primary,
@@ -475,7 +460,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
                   trailing: IconButton(
-                    icon: Icon(Icons.edit, color: Colors.blue),
+                    icon: Icon(Icons.edit, color: theme.colorScheme.primary),
                     onPressed: () => _showUserDialog(user: _displayedUsers[index]),
                   ),
                   onTap: () {
@@ -490,18 +475,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
                   selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserDialog(),
         icon: Icon(Icons.add),
         label: Text('Add User'),
-        backgroundColor: theme.colorScheme.primary,
       ),
     );
   }

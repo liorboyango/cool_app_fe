@@ -144,8 +144,8 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: _lightSurface,
       indicatorColor: _lightPrimary.withOpacity(0.1),
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      labelTextStyle: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
           return const TextStyle(
             color: _lightPrimary,
             fontSize: 12,
@@ -308,8 +308,8 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: _darkSurface,
       indicatorColor: _darkPrimary.withOpacity(0.1),
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      labelTextStyle: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
           return const TextStyle(
             color: _darkPrimary,
             fontSize: 12,
