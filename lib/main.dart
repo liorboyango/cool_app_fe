@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'app_config/constants.dart';
+import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 
@@ -26,14 +27,8 @@ class MyApp extends StatelessWidget {
       builder: (context, themeNotifier, child) {
         return MaterialApp(
           title: 'Coolest App Ever',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0)), // Vibrant purple
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), brightness: Brightness.dark),
-            useMaterial3: true,
-          ),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           themeMode: themeNotifier.themeMode,
           home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
         );
@@ -184,12 +179,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _confirmDeleteSelected() {
+    final theme = Theme.of(context);
     final selectedUsers = _displayedUsers.where((u) => _selectedUserIds.contains(u['id'])).toList();
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Bulk Deletion'),
           content: Text('Are you sure you want to delete ${selectedUsers.length} users?'),
           actions: <Widget>[
@@ -205,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
                 await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
         );
@@ -214,11 +210,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<bool> _confirmDeleteSwipe(dynamic user) async {
+    final theme = Theme.of(context);
     bool? result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Deletion'),
           content: Text('Are you sure you want to delete ${user['name']} forever?'),
           actions: <Widget>[
@@ -229,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               child: const Text('Delete'),
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
         );
@@ -324,222 +321,172 @@ class _MyHomePageState extends State<MyHomePage> {
     final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.inversePrimary,
         title: Text(widget.title),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple, Colors.indigo],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
-        ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: theme.brightness == Brightness.dark
-                ? [Color(0xFF121212), Color(0xFF1E1E1E)]
-                : [Color(0xFFF3E5F5), Color(0xFFE1BEE7)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: ListView(
+        padding: EdgeInsets.all(16.0),
+        children: [
+          Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Icon(Icons.info, color: theme.colorScheme.primary),
+                  SizedBox(width: 16),
+                  Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: ListView(
-          padding: EdgeInsets.all(16.0),
-          children: [
-            Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.info, color: theme.colorScheme.primary),
-                    SizedBox(width: 16),
-                    Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _fetchServerStatus,
-                  icon: Icon(Icons.refresh),
-                  label: Text('Refresh Status'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: _fetchUsers,
-                  icon: Icon(Icons.people),
-                  label: Text('Refresh Users'),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        labelText: 'Search by name or email',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: Icon(Icons.search),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(Icons.clear),
-                                onPressed: () => _searchController.clear(),
-                              )
-                            : null,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    DropdownButtonFormField<String?>(
-                      value: _selectedRole,
-                      decoration: InputDecoration(
-                        labelText: 'Filter by role',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        prefixIcon: Icon(Icons.filter_list),
-                      ),
-                      items: <DropdownMenuItem<String?>>[
-                        DropdownMenuItem<String?>(
-                          value: null,
-                          child: Text('All'),
-                        ),
-                      ] + roles.map<DropdownMenuItem<String?>>((String role) {
-                        return DropdownMenuItem<String?>(
-                          value: role,
-                          child: Text(role),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRole = newValue;
-                          _updateDisplayedUsers();
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (_selectedUserIds.isNotEmpty) ...[
-              SizedBox(height: 16),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               ElevatedButton.icon(
-                onPressed: _confirmDeleteSelected,
-                icon: Icon(Icons.delete_forever),
-                label: Text('Delete Selected (${_selectedUserIds.length})'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                onPressed: _fetchServerStatus,
+                icon: Icon(Icons.refresh),
+                label: Text('Refresh Status'),
+              ),
+              SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: _fetchUsers,
+                icon: Icon(Icons.people),
+                label: Text('Refresh Users'),
               ),
             ],
-            SizedBox(height: 16),
-            Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: _displayedUsers.length,
-              itemBuilder: (context, index) => Dismissible(
-                key: Key(_displayedUsers[index]['id'].toString()),
-                direction: DismissDirection.horizontal,
-                confirmDismiss: (direction) async {
-                  final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
-                  if (confirmed) {
-                    await _deleteUser(_displayedUsers[index]['id']);
-                  }
-                  return false;
-                },
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(left: 20),
-                  child: Icon(Icons.delete, color: Colors.white),
-                ),
-                secondaryBackground: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: EdgeInsets.only(right: 20),
-                  child: Icon(Icons.delete, color: Colors.white),
-                ),
-                child: Card(
-                  elevation: 4,
-                  margin: EdgeInsets.only(bottom: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: theme.colorScheme.primary,
-                      child: Text(
-                        _displayedUsers[index]['name'][0].toUpperCase(),
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: 'Search by name or email',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.clear),
+                              onPressed: () => _searchController.clear(),
+                            )
+                          : null,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  DropdownButtonFormField<String?>(
+                    value: _selectedRole,
+                    decoration: InputDecoration(
+                      labelText: 'Filter by role',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      prefixIcon: Icon(Icons.filter_list),
+                    ),
+                    items: <DropdownMenuItem<String?>>[
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text('All'),
                       ),
-                    ),
-                    title: Text(
-                      _displayedUsers[index]['name'],
-                      style: TextStyle(
-                        fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
-                        color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
-                      ),
-                    ),
-                    subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                    ),
-                    onTap: () {
+                    ] + roles.map<DropdownMenuItem<String?>>((String role) {
+                      return DropdownMenuItem<String?>(
+                        value: role,
+                        child: Text(role),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
                       setState(() {
-                        final id = _displayedUsers[index]['id'];
-                        if (_selectedUserIds.contains(id)) {
-                          _selectedUserIds.remove(id);
-                        } else {
-                          _selectedUserIds.add(id);
-                        }
+                        _selectedRole = newValue;
+                        _updateDisplayedUsers();
                       });
                     },
-                    selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                    selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                ],
+              ),
+            ),
+          ),
+          if (_selectedUserIds.isNotEmpty) ...[
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _confirmDeleteSelected,
+              icon: Icon(Icons.delete_forever),
+              label: Text('Delete Selected (${_selectedUserIds.length})'),
+              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
+            ),
+          ],
+          SizedBox(height: 16),
+          Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _displayedUsers.length,
+            itemBuilder: (context, index) => Dismissible(
+              key: Key(_displayedUsers[index]['id'].toString()),
+              direction: DismissDirection.horizontal,
+              confirmDismiss: (direction) async {
+                final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
+                if (confirmed) {
+                  await _deleteUser(_displayedUsers[index]['id']);
+                }
+                return false;
+              },
+              background: Container(
+                color: theme.colorScheme.error,
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.only(left: 20),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              secondaryBackground: Container(
+                color: theme.colorScheme.error,
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(right: 20),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              child: Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.primary,
+                    child: Text(
+                      _displayedUsers[index]['name'][0].toUpperCase(),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  title: Text(
+                    _displayedUsers[index]['name'],
+                    style: TextStyle(
+                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
+                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
+                    ),
+                  ),
+                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      final id = _displayedUsers[index]['id'];
+                      if (_selectedUserIds.contains(id)) {
+                        _selectedUserIds.remove(id);
+                      } else {
+                        _selectedUserIds.add(id);
+                      }
+                    });
+                  },
+                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
+                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserDialog(),
         icon: Icon(Icons.add),
         label: Text('Add User'),
-        backgroundColor: theme.colorScheme.primary,
       ),
     );
   }
