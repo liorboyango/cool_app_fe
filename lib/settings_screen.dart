@@ -21,10 +21,10 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Dark Theme'),
                 trailing: ThemeToggle(
                   isDark: themeNotifier.themeMode == ThemeMode.dark,
-                  onToggle: themeNotifier.toggleTheme,
+                  onToggle: (bool value) => themeNotifier.toggleTheme(),
                 ),
                 onTap: () {
-                  themeNotifier.toggleTheme(themeNotifier.themeMode != ThemeMode.dark);
+                  themeNotifier.toggleTheme();
                 },
               );
             },

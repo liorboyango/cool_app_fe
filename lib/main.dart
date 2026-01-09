@@ -110,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       setState(() {
         _users = [];
-        _displayedUsers = [];
+          _displayedUsers = [];
       });
     }
   }
@@ -325,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
         elevation: 0,
       ),
       body: Container(
-        color: theme.colorScheme.background,
+        color: theme.scaffoldBackgroundColor,
         child: ListView(
           padding: EdgeInsets.all(16.0),
           children: [
