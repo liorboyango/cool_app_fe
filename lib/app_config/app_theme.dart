@@ -80,6 +80,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
@@ -96,6 +97,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
@@ -108,6 +110,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
@@ -152,8 +155,8 @@ class AppTheme {
     
     // SnackBar Theme
     snackBarTheme: const SnackBarThemeData(
-      backgroundColor: AppColors.lightSurfaceVariant,
-      contentTextStyle: TextStyle(color: AppColors.lightTextPrimary),
+      backgroundColor: Color(0xFF424242),
+      contentTextStyle: TextStyle(color: Colors.white),
       actionTextColor: AppColors.lightPrimary,
     ),
   );
@@ -233,6 +236,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
@@ -249,6 +253,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
@@ -261,6 +266,7 @@ class AppTheme {
         textStyle: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: null,
         ),
       ),
     ),
