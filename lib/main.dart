@@ -200,7 +200,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
                 await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         );
@@ -224,7 +227,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               child: const Text('Delete'),
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         );
@@ -322,7 +328,18 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: theme.colorScheme.surface,
         foregroundColor: theme.colorScheme.onSurface,
         title: Text(widget.title),
-        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         color: theme.scaffoldBackgroundColor,
@@ -426,6 +443,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 label: Text('Delete Selected (${_selectedUserIds.length})'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.colorScheme.error,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
@@ -494,7 +512,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       });
                     },
                     selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                    selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+                    selectedTileColor: theme.colorScheme.primary.withOpacity(0.2),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
