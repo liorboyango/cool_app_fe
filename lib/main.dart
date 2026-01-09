@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import 'app_config/constants.dart';
+import 'theme/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 
@@ -26,14 +27,8 @@ class MyApp extends StatelessWidget {
       builder: (context, themeNotifier, child) {
         return MaterialApp(
           title: 'Coolest App Ever',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0)), // Vibrant purple
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF9C27B0), brightness: Brightness.dark),
-            useMaterial3: true,
-          ),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
           themeMode: themeNotifier.themeMode,
           home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
         );
@@ -189,7 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: Theme.of(context).colorScheme.secondary),
           title: const Text('Confirm Bulk Deletion'),
           content: Text('Are you sure you want to delete ${selectedUsers.length} users?'),
           actions: <Widget>[
@@ -205,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.of(context).pop();
                 await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             ),
           ],
         );
@@ -218,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: Icon(Icons.warning, color: Colors.orange),
+          icon: Icon(Icons.warning, color: Theme.of(context).colorScheme.secondary),
           title: const Text('Confirm Deletion'),
           content: Text('Are you sure you want to delete ${user['name']} forever?'),
           actions: <Widget>[
@@ -229,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               child: const Text('Delete'),
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             ),
           ],
         );
@@ -324,46 +319,19 @@ class _MyHomePageState extends State<MyHomePage> {
     final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.inversePrimary,
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         title: Text(widget.title),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.purple, Colors.indigo],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
-              );
-            },
-          ),
-        ],
+        elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: theme.brightness == Brightness.dark
-                ? [Color(0xFF121212), Color(0xFF1E1E1E)]
-                : [Color(0xFFF3E5F5), Color(0xFFE1BEE7)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: theme.colorScheme.background,
         child: ListView(
           padding: EdgeInsets.all(16.0),
           children: [
             Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Row(
@@ -384,7 +352,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(Icons.refresh),
                   label: Text('Refresh Status'),
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
                 SizedBox(width: 16),
@@ -393,15 +361,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(Icons.people),
                   label: Text('Refresh Users'),
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 16),
             Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
@@ -410,7 +378,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         labelText: 'Search by name or email',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         prefixIcon: Icon(Icons.search),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
@@ -425,7 +393,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       value: _selectedRole,
                       decoration: InputDecoration(
                         labelText: 'Filter by role',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         prefixIcon: Icon(Icons.filter_list),
                       ),
                       items: <DropdownMenuItem<String?>>[
@@ -457,8 +425,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 icon: Icon(Icons.delete_forever),
                 label: Text('Delete Selected (${_selectedUserIds.length})'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: theme.colorScheme.error,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ],
@@ -480,19 +448,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   return false;
                 },
                 background: Container(
-                  color: Colors.red,
+                  color: theme.colorScheme.error,
                   alignment: Alignment.centerLeft,
                   padding: EdgeInsets.only(left: 20),
                   child: Icon(Icons.delete, color: Colors.white),
                 ),
                 secondaryBackground: Container(
-                  color: Colors.red,
+                  color: theme.colorScheme.error,
                   alignment: Alignment.centerRight,
                   padding: EdgeInsets.only(right: 20),
                   child: Icon(Icons.delete, color: Colors.white),
                 ),
                 child: Card(
-                  elevation: 4,
+                  elevation: 0,
                   margin: EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: ListTile(
@@ -512,7 +480,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
                     trailing: IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue),
+                      icon: Icon(Icons.edit, color: theme.colorScheme.secondary),
                       onPressed: () => _showUserDialog(user: _displayedUsers[index]),
                     ),
                     onTap: () {
