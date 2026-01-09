@@ -36,6 +36,10 @@ class AppColors {
   static const Color lightError = Color(0xFFDC2626);
   static const Color lightInfo = Color(0xFF0284C7);
   
+  // SnackBar
+  static const Color lightSnackBarBackground = Color(0xFF424242);
+  static const Color lightSnackBarText = Color(0xFFFFFFFF);
+  
   // ============================================
   // DARK THEME COLORS
   // ============================================
