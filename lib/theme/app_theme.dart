@@ -20,8 +20,6 @@ class AppTheme {
       onSecondary: Colors.white,
       surface: AppColors.lightSurface,
       onSurface: AppColors.lightTextPrimary,
-      background: AppColors.lightBackground,
-      onBackground: AppColors.lightTextPrimary,
       error: AppColors.error,
       onError: Colors.white,
       outline: AppColors.lightBorder,
@@ -165,14 +163,14 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: AppColors.lightSurface,
       indicatorColor: AppColors.lightPrimary.withOpacity(0.12),
-      iconTheme: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: AppColors.lightPrimary);
         }
         return const IconThemeData(color: AppColors.lightTextDisabled);
       }),
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return const TextStyle(
             color: AppColors.lightPrimary,
             fontSize: 12,
@@ -211,14 +209,14 @@ class AppTheme {
     
     // Switch
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return AppColors.lightPrimary;
         }
         return AppColors.lightTextDisabled;
       }),
-      trackColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return AppColors.lightPrimary.withOpacity(0.5);
         }
         return AppColors.lightDivider;
@@ -363,8 +361,6 @@ class AppTheme {
       onSecondary: Colors.white,
       surface: AppColors.darkSurface,
       onSurface: AppColors.darkTextPrimary,
-      background: AppColors.darkBackground,
-      onBackground: AppColors.darkTextPrimary,
       error: AppColors.error,
       onError: Colors.white,
       outline: AppColors.darkBorder,
@@ -508,14 +504,14 @@ class AppTheme {
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: AppColors.darkSurface,
       indicatorColor: AppColors.darkPrimary.withOpacity(0.12),
-      iconTheme: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return const IconThemeData(color: AppColors.darkPrimary);
         }
         return const IconThemeData(color: AppColors.darkTextDisabled);
       }),
-      labelTextStyle: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return const TextStyle(
             color: AppColors.darkPrimary,
             fontSize: 12,
@@ -554,14 +550,14 @@ class AppTheme {
     
     // Switch
     switchTheme: SwitchThemeData(
-      thumbColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return AppColors.darkPrimary;
         }
         return AppColors.darkTextDisabled;
       }),
-      trackColor: MaterialStateProperty.resolveWith((states) {
-        if (states.contains(MaterialState.selected)) {
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
           return AppColors.darkPrimary.withOpacity(0.5);
         }
         return AppColors.darkDivider;
