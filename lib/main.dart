@@ -37,8 +37,27 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          title: 'Coolest App Ever',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeNotifier.themeMode,
+          home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
+        );
+      },
+    );
+  }
+}
+
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key}, required this.title);
 
   final String title;
 
@@ -110,9 +129,8 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       setState(() {
         _users = [];
-          _displayedUsers = [];
-        }
-      }
+        _displayedUsers = [];
+      });
     }
   }
 
@@ -195,8 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-            ),
-            ElevatedButton(
+            ),n            ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
@@ -432,26 +449,39 @@ class _MyHomePageState extends State<MyHomePage> {
           SizedBox(height: 16),
           Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
-          GridView.builder(
+          ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16.0,
-              mainAxisSpacing: 16.0,
-              childAspectRatio: 1.2,
-            ),
             itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) {
-              final user = _displayedUsers[index];
-              final isSelected = _selectedUserIds.contains(user['id']);
-              return Card(
+            itemBuilder: (context, index) => Dismissible(
+              key: Key(_displayedUsers[index]['id'].toString()),
+              direction: DismissDirection.horizontal,
+              confirmDismiss: (direction) async {
+                final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
+                if (confirmed) {
+                  await _deleteUser(_displayedUsers[index]['id']);
+                }
+                return false;
+              },
+              background: Container(
+                color: theme.colorScheme.error,
+                alignment: Alignment.centerLeft,
+                padding: EdgeInsets.only(left: 20),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              secondaryBackground: Container(
+                color: theme.colorScheme.error,
+                alignment: Alignment.centerRight,
+                padding: EdgeInsets.only(right: 20),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+              child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: InkWell(
                   onTap: () {
                     setState(() {
-                      final id = user['id'];
+                      final id = _displayedUsers[index]['id'];
                       if (_selectedUserIds.contains(id)) {
                         _selectedUserIds.remove(id);
                       } else {
@@ -463,7 +493,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : null,
+                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary.withOpacity(0.1) : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -472,29 +502,29 @@ class _MyHomePageState extends State<MyHomePage> {
                           radius: 40,
                           backgroundColor: theme.colorScheme.primary,
                           child: Text(
-                            (user['name']?.isNotEmpty == true ? user['name'][0] : '?').toUpperCase(),
+                            (_displayedUsers[index]['name']?.isNotEmpty == true ? _displayedUsers[index]['name'][0] : '?').toUpperCase(),
                             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                         ),
                         SizedBox(height: 12),
                         Text(
-                          user['name'],
+                          _displayedUsers[index]['name'],
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? theme.colorScheme.primary : null,
+                            color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: 4),
                         Text(
-                          user['role'],
+                          _displayedUsers[index]['role'],
                           style: TextStyle(color: theme.colorScheme.secondary),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: 4),
                         Text(
-                          user['email'],
+                          _displayedUsers[index]['email'],
                           style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
                           textAlign: TextAlign.center,
                           maxLines: 1,
@@ -503,14 +533,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         SizedBox(height: 8),
                         IconButton(
                           icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                          onPressed: () => _showUserDialog(user: user),
+                          onPressed: () => _showUserDialog(user: _displayedUsers[index]),
                         ),
                       ],
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ],
       ),
