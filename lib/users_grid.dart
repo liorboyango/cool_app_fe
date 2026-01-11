@@ -22,21 +22,23 @@ class UsersGrid extends StatelessWidget {
     final crossAxisCount = screenWidth > 900 ? 3 : (screenWidth > 600 ? 2 : 1);
 
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(24),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
-        childAspectRatio: 1.4,
+        childAspectRatio: 1.6,
       ),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
         return UserCard(
           name: user['name'],
-          location: user['location'],
-          avatarUrl: user['avatarUrl'],
-          tags: List<String>.from(user['tags']),
+          location: user['location'] ?? '',
+          avatarUrl: user['avatarUrl'] ?? '',
+          tags: List<String>.from(user['tags'] ?? []),
           isSelected: selectedIds.contains(user['id']),
           onTap: () => onSelect(user['id']),
           onLongPress: () => onEdit(user),
