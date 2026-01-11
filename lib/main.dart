@@ -472,7 +472,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           radius: 40,
                           backgroundColor: theme.colorScheme.primary,
                           child: Text(
-                            user['name'][0].toUpperCase(),
+                            (user['name']?.isNotEmpty == true ? user['name'][0] : '?').toUpperCase(),
                             style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                         ),
