@@ -8,11 +8,11 @@ class AppTheme {
   static const Color _lightPrimary = Color(0xFF2563EB);
   static const Color _lightPrimaryVariant = Color(0xFF1D4ED8);
   static const Color _lightSecondary = Color(0xFF64748B);
-  static const Color _lightBackground = Color(0xFFF8FAFC);
+  static const Color _lightBackground = Color(0xFFF8F9FA);
   static const Color _lightSurface = Color(0xFFFFFFFF);
   static const Color _lightError = Color(0xFFDC2626);
   static const Color _lightOnPrimary = Color(0xFFFFFFFF);
-  static const Color _lightOnBackground = Color(0xFF1E293B);
+  static const Color _lightOnBackground = Color(0xFF1F2937);
   static const Color _lightOnSurface = Color(0xFF334155);
   static const Color _lightOnSurfaceVariant = Color(0xFF64748B);
 
@@ -54,7 +54,7 @@ class AppTheme {
     appBarTheme: const AppBarTheme(
       elevation: 0,
       centerTitle: true,
-      backgroundColor: _lightSurface,
+      backgroundColor: _lightBackground,
       foregroundColor: _lightOnBackground,
       surfaceTintColor: Colors.transparent,
       titleTextStyle: TextStyle(
@@ -317,9 +317,9 @@ class AppTheme {
           );
         }
         return const TextStyle(
-          color: _darkOnSurfaceVariant,
-          fontSize: 12,
-        );
+            color: _darkOnSurfaceVariant,
+            fontSize: 12,
+          );
       }),
     ),
     
