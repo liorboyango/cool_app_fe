@@ -110,8 +110,9 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       setState(() {
         _users = [];
-        _displayedUsers = [];
-      });
+          _displayedUsers = [];
+        }
+      }
     }
   }
 
@@ -431,56 +432,26 @@ class _MyHomePageState extends State<MyHomePage> {
           SizedBox(height: 16),
           Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
-          ListView.builder(
+          GridView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 1.2,
+            ),
             itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => Dismissible(
-              key: Key(_displayedUsers[index]['id'].toString()),
-              direction: DismissDirection.horizontal,
-              confirmDismiss: (direction) async {
-                final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
-                if (confirmed) {
-                  await _deleteUser(_displayedUsers[index]['id']);
-                }
-                return false;
-              },
-              background: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.only(left: 20),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              secondaryBackground: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(right: 20),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              child: Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      _displayedUsers[index]['name'][0].toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    _displayedUsers[index]['name'],
-                    style: TextStyle(
-                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
-                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
-                    ),
-                  ),
-                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                  ),
+            itemBuilder: (context, index) {
+              final user = _displayedUsers[index];
+              final isSelected = _selectedUserIds.contains(user['id']);
+              return Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: InkWell(
                   onTap: () {
                     setState(() {
-                      final id = _displayedUsers[index]['id'];
+                      final id = user['id'];
                       if (_selectedUserIds.contains(id)) {
                         _selectedUserIds.remove(id);
                       } else {
@@ -488,12 +459,58 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                     });
                   },
-                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: isSelected ? theme.colorScheme.primary.withOpacity(0.1) : null,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: theme.colorScheme.primary,
+                          child: Text(
+                            user['name'][0].toUpperCase(),
+                            style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          user['name'],
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? theme.colorScheme.primary : null,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          user['role'],
+                          style: TextStyle(color: theme.colorScheme.secondary),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          user['email'],
+                          style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 8),
+                        IconButton(
+                          icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                          onPressed: () => _showUserDialog(user: user),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
