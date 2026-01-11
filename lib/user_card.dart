@@ -33,7 +33,7 @@ class UserCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD4DCE8).withOpacity(0.3),
+              color: const Color.fromRGBO(0xD4, 0xDC, 0xE8, 0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -47,7 +47,8 @@ class UserCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                  child: avatarUrl.isEmpty ? const Icon(Icons.person) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
