@@ -8,6 +8,7 @@ import 'app_config/constants.dart';
 import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
+import 'users_grid.dart';
 
 void main() {
   runApp(
@@ -46,7 +47,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   String _status = 'Fetching...';
   List<dynamic> _users = [];
   String _searchQuery = '';
@@ -54,12 +55,21 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _searchController.addListener(_updateSearchQuery);
+    _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        final roles = [null, 'Reputation', 'Voters', 'Editors', 'Moderators'];
+        _selectedRole = roles[_tabController.index];
+        _updateDisplayedUsers();
+      });
+    });
     _fetchServerStatus();
     _fetchUsers();
   }
@@ -239,6 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final nameController = TextEditingController(text: user?['name'] ?? '');
     final roleController = TextEditingController(text: user?['role'] ?? '');
     final emailController = TextEditingController(text: user?['email'] ?? '');
+    final locationController = TextEditingController(text: user?['location'] ?? '');
     final isEdit = user != null;
 
     final result = await showDialog<bool>(
@@ -262,6 +273,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 controller: emailController,
                 decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
               ),
+              TextField(
+                controller: locationController,
+                decoration: const InputDecoration(labelText: 'Location', prefixIcon: Icon(Icons.location_on)),
+              ),
             ],
           ),
         ),
@@ -282,6 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
       final name = nameController.text.trim();
       final role = roleController.text.trim();
       final email = emailController.text.trim();
+      final location = locationController.text.trim();
       if (name.isEmpty || role.isEmpty || email.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('All fields are required')),
@@ -289,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return;
       }
       try {
-        final body = json.encode({'name': name, 'role': role, 'email': email});
+        final body = json.encode({'name': name, 'role': role, 'email': email, 'location': location});
         final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
@@ -390,30 +406,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   SizedBox(height: 16),
-                  DropdownButtonFormField<String?>(
-                    value: _selectedRole,
-                    decoration: InputDecoration(
-                      labelText: 'Filter by role',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      prefixIcon: Icon(Icons.filter_list),
-                    ),
-                    items: <DropdownMenuItem<String?>>[
-                      DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text('All'),
-                      ),
-                    ] + roles.map<DropdownMenuItem<String?>>((String role) {
-                      return DropdownMenuItem<String?>(
-                        value: role,
-                        child: Text(role),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedRole = newValue;
-                        _updateDisplayedUsers();
-                      });
-                    },
+                  TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Tab(text: 'All'),
+                      Tab(text: 'Reputation'),
+                      Tab(text: 'Voters'),
+                      Tab(text: 'Editors'),
+                      Tab(text: 'Moderators'),
+                    ],
                   ),
                 ],
               ),
@@ -431,68 +432,21 @@ class _MyHomePageState extends State<MyHomePage> {
           SizedBox(height: 16),
           Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
           SizedBox(height: 8),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => Dismissible(
-              key: Key(_displayedUsers[index]['id'].toString()),
-              direction: DismissDirection.horizontal,
-              confirmDismiss: (direction) async {
-                final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
-                if (confirmed) {
-                  await _deleteUser(_displayedUsers[index]['id']);
-                }
-                return false;
+          SizedBox(
+            height: 600, // Adjust height as needed
+            child: UsersGrid(
+              users: _displayedUsers,
+              selectedIds: _selectedUserIds,
+              onSelect: (id) {
+                setState(() {
+                  if (_selectedUserIds.contains(id)) {
+                    _selectedUserIds.remove(id);
+                  } else {
+                    _selectedUserIds.add(id);
+                  }
+                });
               },
-              background: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.only(left: 20),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              secondaryBackground: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(right: 20),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              child: Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      _displayedUsers[index]['name'][0].toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    _displayedUsers[index]['name'],
-                    style: TextStyle(
-                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
-                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
-                    ),
-                  ),
-                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      final id = _displayedUsers[index]['id'];
-                      if (_selectedUserIds.contains(id)) {
-                        _selectedUserIds.remove(id);
-                      } else {
-                        _selectedUserIds.add(id);
-                      }
-                    });
-                  },
-                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
+              onEdit: (user) => _showUserDialog(user: user),
             ),
           ),
         ],
@@ -508,6 +462,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 }
