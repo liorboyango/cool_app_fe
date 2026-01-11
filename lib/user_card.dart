@@ -7,6 +7,7 @@ class UserCard extends StatelessWidget {
   final List<String> tags;
   final bool isSelected;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const UserCard({
     super.key,
@@ -16,12 +17,14 @@ class UserCard extends StatelessWidget {
     required this.tags,
     this.isSelected = false,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
