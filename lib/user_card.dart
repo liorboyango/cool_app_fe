@@ -22,21 +22,22 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4B7BF5) : const Color(0xFFE8EDF2),
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outline,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD4DCE8).withOpacity(0.3),
+              color: theme.shadowColor.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -50,7 +51,9 @@ class UserCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                  child: avatarUrl.isEmpty ? Text(name[0].toUpperCase(), style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold)) : null,
+                  backgroundColor: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -59,18 +62,18 @@ class UserCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A2B4A),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         location,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF6B7A99),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -82,7 +85,7 @@ class UserCard extends StatelessWidget {
             Wrap(
               spacing: 6,
               runSpacing: 6,
-              children: tags.map((tag) => _buildTag(tag)).toList(),
+              children: tags.map((tag) => _buildTag(tag, theme)).toList(),
             ),
           ],
         ),
@@ -90,18 +93,18 @@ class UserCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTag(String label) {
+  Widget _buildTag(String label, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFD4DCE8)),
+        border: Border.all(color: theme.colorScheme.outline),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
-          color: Color(0xFF4B7BF5),
+          color: theme.colorScheme.primary,
         ),
       ),
     );
