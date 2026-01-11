@@ -51,7 +51,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Fetching...';
   List<dynamic> _users = [];
   String _searchQuery = '';
-  List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
 
@@ -118,12 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
       filtered = filtered.where((u) => u['role'] == role).toList();
     }
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()) || (u['email'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
     }
     filtered.sort((a, b) {
-      final roleComp = (a['role'] as String).compareTo(b['role']);
+      final roleComp = ((a['role'] as String?) ?? '').compareTo((b['role'] as String?) ?? '');
       if (roleComp != 0) return roleComp;
-      return (a['name'] as String).compareTo(b['name']);
+      return ((a['name'] as String?) ?? '').compareTo((b['name'] as String?) ?? '');
     });
     return filtered;
   }
@@ -211,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete ${user['name']} forever?'),
+          content: Text('Are you sure you want to delete ${(user['name'] as String?) ?? 'Unknown'} forever?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -230,9 +229,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _showUserDialog({Map<String, dynamic>? user}) async {
-    final nameController = TextEditingController(text: user?['name'] ?? '');
-    final roleController = TextEditingController(text: user?['role'] ?? '');
-    final emailController = TextEditingController(text: user?['email'] ?? '');
+    final nameController = TextEditingController(text: (user?['name'] as String?) ?? '');
+    final roleController = TextEditingController(text: (user?['role'] as String?) ?? '');
+    final emailController = TextEditingController(text: (user?['email'] as String?) ?? '');
     final isEdit = user != null;
 
     final result = await showDialog<bool>(
@@ -321,23 +320,32 @@ class _MyHomePageState extends State<MyHomePage> {
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
+        final userId = (user['id'] as int?) ?? 0;
+        final userName = (user['name'] as String?) ?? 'Unknown';
+        final userEmail = (user['email'] as String?) ?? '';
+        final userRole = (user['role'] as String?) ?? '';
         return UserCard(
-          name: user['name'],
-          location: user['email'],
-          avatarUrl: 'https://i.pravatar.cc/150?img=${user['id']}',
-          tags: [user['role']],
-          isSelected: _selectedUserIds.contains(user['id']),
+          name: userName,
+          location: userEmail,
+          avatarUrl: 'https://i.pravatar.cc/150?img=$userId',
+          tags: [userRole],
+          isSelected: _selectedUserIds.contains(userId),
           onTap: () {
             setState(() {
-              final id = user['id'];
-              if (_selectedUserIds.contains(id)) {
-                _selectedUserIds.remove(id);
+              if (_selectedUserIds.contains(userId)) {
+                _selectedUserIds.remove(userId);
               } else {
-                _selectedUserIds.add(id);
+                _selectedUserIds.add(userId);
               }
             });
           },
           onEdit: () => _showUserDialog(user: user),
+          onDelete: () async {
+            final confirmed = await _confirmDeleteSwipe(user);
+            if (confirmed) {
+              await _deleteUser(userId);
+            }
+          },
         );
       },
     );
@@ -346,7 +354,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final roles = _users.map((u) => u['role'] as String).toSet().toList();
+    final roles = _users.map((u) => (u['role'] as String?) ?? '').toSet().where((r) => r.isNotEmpty).toList();
     return DefaultTabController(
       length: roles.length + 1,
       child: Scaffold(
@@ -368,7 +376,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
         body: Container(
-          color: const Color(0xFFE8EAF0),
+          color: theme.scaffoldBackgroundColor,
           child: Column(
             children: [
               Padding(

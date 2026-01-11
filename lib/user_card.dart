@@ -8,6 +8,7 @@ class UserCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const UserCard({
     super.key,
@@ -18,21 +19,24 @@ class UserCard extends StatelessWidget {
     this.isSelected = false,
     this.onTap,
     this.onEdit,
+    this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onDelete,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: isSelected ? Border.all(color: const Color(0xFF3B5BDB), width: 1.5) : null,
+          border: isSelected ? Border.all(color: theme.colorScheme.primary, width: 1.5) : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Color.fromRGBO(0, 0, 0, 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -46,6 +50,15 @@ class UserCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 28,
                   backgroundImage: NetworkImage(avatarUrl),
+                  onBackgroundImageError: (_, __) {},
+                  child: Text(
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: TextStyle(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  backgroundColor: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -54,25 +67,25 @@ class UserCard extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1A2E),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         location,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Color(0xFF6B7280),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
-                        children: tags.map((tag) => _buildTag(tag)).toList(),
+                        children: tags.map((tag) => _buildTag(tag, theme)).toList(),
                       ),
                     ],
                   ),
@@ -84,7 +97,7 @@ class UserCard extends StatelessWidget {
                 top: 8,
                 right: 8,
                 child: IconButton(
-                  icon: const Icon(Icons.edit, size: 20, color: Color(0xFF3B5BDB)),
+                  icon: Icon(Icons.edit, size: 20, color: theme.colorScheme.primary),
                   onPressed: onEdit,
                 ),
               ),
@@ -94,16 +107,16 @@ class UserCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTag(String tag) {
+  Widget _buildTag(String tag, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFD1D5DB)),
+        border: Border.all(color: theme.colorScheme.outline),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         tag,
-        style: const TextStyle(fontSize: 12, color: Color(0xFF374151)),
+        style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
       ),
     );
   }
