@@ -134,26 +134,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _deleteUser(int id) async {
-    try {
-      final response = await http.delete(Uri.parse('${Constants.webServiceBaseUrl}/api/users/$id'));
-      if (response.statusCode == 200) {
-        await _fetchUsers();
-        setState(() {
-          _selectedUserIds.remove(id);
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete user')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
   Future<void> _deleteUsers(List<int> ids) async {
     try {
       final response = await http.delete(
@@ -209,32 +189,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<bool> _confirmDeleteSwipe(dynamic user) async {
-    final theme = Theme.of(context);
-    bool? result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          icon: Icon(Icons.warning, color: theme.colorScheme.error),
-          title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete ${user['name'] ?? 'user'} forever?'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            ElevatedButton(
-              child: const Text('Delete'),
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
-            ),
-          ],
-        );
-      },
-    );
-    return result ?? false;
-  }
-
   Future<void> _showUserDialog({Map<String, dynamic>? user}) async {
     final nameController = TextEditingController(text: user?['name'] ?? '');
     final roleController = TextEditingController(text: user?['role'] ?? '');
@@ -264,8 +218,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-        ),
-        actions: [
+        ),n        actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
@@ -434,11 +387,11 @@ class _MyHomePageState extends State<MyHomePage> {
           GridView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16.0,
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 250,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 1.8,
+              crossAxisSpacing: 16.0,
+              childAspectRatio: 0.8,
             ),
             itemCount: _displayedUsers.length,
             itemBuilder: (context, index) {
@@ -506,6 +459,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         SizedBox(height: 8),
                         IconButton(
                           icon: Icon(Icons.edit, color: theme.colorScheme.primary),
+                          tooltip: 'Edit user',
                           onPressed: () => _showUserDialog(user: user),
                         ),
                       ],
