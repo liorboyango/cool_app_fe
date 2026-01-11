@@ -46,7 +46,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   String _status = 'Fetching...';
   List<dynamic> _users = [];
   String _searchQuery = '';
@@ -54,12 +54,21 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _displayedUsers = [];
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
+  late TabController _tabController;
+  int _selectedTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _searchController.addListener(_updateSearchQuery);
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _selectedTabIndex = _tabController.index;
+        _updateDisplayedUsers();
+      });
+    });
     _fetchServerStatus();
     _fetchUsers();
   }
@@ -117,8 +126,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _updateDisplayedUsers() {
     var filtered = List<dynamic>.from(_users);
-    if (_selectedRole != null) {
+    if (_selectedTabIndex != 0) {
+      final roles = ['voter', 'editor', 'moderator'];
+      _selectedRole = roles[_selectedTabIndex - 1];
       filtered = filtered.where((u) => u['role'] == _selectedRole).toList();
+    } else {
+      _selectedRole = null;
     }
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()) || (u['email'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
@@ -315,11 +328,73 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Widget _buildUserCard(Map<String, dynamic> user) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedUserIds.contains(user['id']);
+    return InkWell(
+      onTap: () {
+        setState(() {
+          final id = user['id'];
+          if (_selectedUserIds.contains(id)) {
+            _selectedUserIds.remove(id);
+          } else {
+            _selectedUserIds.add(id);
+          }
+        });
+      },
+      onLongPress: () => _showUserDialog(user: user),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: isSelected ? Border.all(color: const Color(0xFF4A6CF7)) : null,
+          boxShadow: const [BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 4))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: theme.colorScheme.primary,
+              child: Text(
+                user['name'][0].toUpperCase(),
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              user['name'],
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1D2939)),
+            ),
+            Text(
+              user['location'],
+              style: const TextStyle(fontSize: 14, color: Color(0xFF667085)),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              children: (user['tags'] as List<dynamic>).map((t) => Chip(
+                label: Text(t, style: const TextStyle(fontSize: 12, color: Color(0xFF4A6CF7))),
+                backgroundColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFF4A6CF7)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
     return Scaffold(
+      backgroundColor: const Color(0xFFF0F3F9),
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
@@ -337,170 +412,102 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.all(16.0),
+      body: Column(
         children: [
           Card(
+            margin: const EdgeInsets.all(16),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
                   Icon(Icons.info, color: theme.colorScheme.primary),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
                 ],
               ),
             ),
           ),
-          SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton.icon(
                 onPressed: _fetchServerStatus,
-                icon: Icon(Icons.refresh),
-                label: Text('Refresh Status'),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh Status'),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               ElevatedButton.icon(
                 onPressed: _fetchUsers,
-                icon: Icon(Icons.people),
-                label: Text('Refresh Users'),
+                icon: const Icon(Icons.people),
+                label: const Text('Refresh Users'),
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
+          TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'Reputation'),
+              Tab(text: 'Voters'),
+              Tab(text: 'Editors'),
+              Tab(text: 'Moderators'),
+            ],
+          ),
+          const SizedBox(height: 16),
           Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
             child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      labelText: 'Search by name or email',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      prefixIcon: Icon(Icons.search),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(Icons.clear),
-                              onPressed: () => _searchController.clear(),
-                            )
-                          : null,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  DropdownButtonFormField<String?>(
-                    value: _selectedRole,
-                    decoration: InputDecoration(
-                      labelText: 'Filter by role',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      prefixIcon: Icon(Icons.filter_list),
-                    ),
-                    items: <DropdownMenuItem<String?>>[
-                      DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text('All'),
-                      ),
-                    ] + roles.map<DropdownMenuItem<String?>>((String role) {
-                      return DropdownMenuItem<String?>(
-                        value: role,
-                        child: Text(role),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedRole = newValue;
-                        _updateDisplayedUsers();
-                      });
-                    },
-                  ),
-                ],
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search by name or email',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => _searchController.clear(),
+                        )
+                      : null,
+                ),
               ),
             ),
           ),
           if (_selectedUserIds.isNotEmpty) ...[
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _confirmDeleteSelected,
-              icon: Icon(Icons.delete_forever),
+              icon: const Icon(Icons.delete_forever),
               label: Text('Delete Selected (${_selectedUserIds.length})'),
               style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
           ],
-          SizedBox(height: 16),
-          Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _displayedUsers.length,
-            itemBuilder: (context, index) => Dismissible(
-              key: Key(_displayedUsers[index]['id'].toString()),
-              direction: DismissDirection.horizontal,
-              confirmDismiss: (direction) async {
-                final confirmed = await _confirmDeleteSwipe(_displayedUsers[index]);
-                if (confirmed) {
-                  await _deleteUser(_displayedUsers[index]['id']);
-                }
-                return false;
-              },
-              background: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.only(left: 20),
-                child: Icon(Icons.delete, color: Colors.white),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Users:', style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
               ),
-              secondaryBackground: Container(
-                color: theme.colorScheme.error,
-                alignment: Alignment.centerRight,
-                padding: EdgeInsets.only(right: 20),
-                child: Icon(Icons.delete, color: Colors.white),
-              ),
-              child: Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: theme.colorScheme.primary,
-                    child: Text(
-                      _displayedUsers[index]['name'][0].toUpperCase(),
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    _displayedUsers[index]['name'],
-                    style: TextStyle(
-                      fontWeight: _selectedUserIds.contains(_displayedUsers[index]['id']) ? FontWeight.bold : FontWeight.normal,
-                      color: _selectedUserIds.contains(_displayedUsers[index]['id']) ? theme.colorScheme.primary : null,
-                    ),
-                  ),
-                  subtitle: Text('Role: ${_displayedUsers[index]['role']} Email: ${_displayedUsers[index]['email']}'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.edit, color: theme.colorScheme.primary),
-                    onPressed: () => _showUserDialog(user: _displayedUsers[index]),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      final id = _displayedUsers[index]['id'];
-                      if (_selectedUserIds.contains(id)) {
-                        _selectedUserIds.remove(id);
-                      } else {
-                        _selectedUserIds.add(id);
-                      }
-                    });
-                  },
-                  selected: _selectedUserIds.contains(_displayedUsers[index]['id']),
-                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
+              itemCount: _displayedUsers.length,
+              itemBuilder: (context, index) => _buildUserCard(_displayedUsers[index]),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserDialog(),
-        icon: Icon(Icons.add),
-        label: Text('Add User'),
+        icon: const Icon(Icons.add),
+        label: const Text('Add User'),
       ),
     );
   }
@@ -508,6 +515,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 }
