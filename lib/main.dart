@@ -37,6 +37,25 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
+        return MaterialApp(
+          title: 'Coolest App Ever',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeNotifier.themeMode,
+          home: const MyHomePage(title: 'Coolest Main Screen Ever!'),
+        );
+      },
+    );
+  }
+}
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -218,7 +237,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ),
-        ),n        actions: [
+        ),
+        actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
