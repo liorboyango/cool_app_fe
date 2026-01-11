@@ -121,12 +121,12 @@ class _MyHomePageState extends State<MyHomePage> {
       filtered = filtered.where((u) => u['role'] == _selectedRole).toList();
     }
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => (u['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()) || (u['email'] as String).toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
     }
     filtered.sort((a, b) {
-      final roleComp = (a['role'] as String).compareTo(b['role']);
+      final roleComp = ((a['role'] as String?) ?? '').compareTo((b['role'] as String?) ?? '');
       if (roleComp != 0) return roleComp;
-      return (a['name'] as String).compareTo(b['name']);
+      return ((a['name'] as String?) ?? '').compareTo((b['name'] as String?) ?? '');
     });
     setState(() {
       _displayedUsers = filtered;
@@ -217,7 +217,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete ${user['name']} forever?'),
+          content: Text('Are you sure you want to delete ${user['name'] ?? 'user'} forever?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -318,7 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final Set<String> roles = _users.map((u) => u['role'] as String).toSet();
+    final Set<String> roles = _users.map((u) => (u['role'] as String?) ?? 'Unknown').toSet();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -477,7 +477,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         SizedBox(height: 12),
                         Text(
-                          user['name'],
+                          user['name'] ?? '',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -489,7 +489,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          user['role'],
+                          user['role'] ?? 'Unknown',
                           style: TextStyle(color: theme.colorScheme.secondary),
                           textAlign: TextAlign.center,
                           maxLines: 1,
@@ -497,7 +497,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         SizedBox(height: 4),
                         Text(
-                          user['email'],
+                          user['email'] ?? '',
                           style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
                           textAlign: TextAlign.center,
                           maxLines: 1,
