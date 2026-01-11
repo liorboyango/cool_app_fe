@@ -6,12 +6,14 @@ class UsersGrid extends StatelessWidget {
   final List<dynamic> users;
   final Set<int> selectedIds;
   final Function(int) onSelect;
+  final Function(dynamic) onEdit;
 
   const UsersGrid({
     super.key,
     required this.users,
     required this.selectedIds,
     required this.onSelect,
+    required this.onEdit,
   });
 
   @override
@@ -37,6 +39,7 @@ class UsersGrid extends StatelessWidget {
           tags: List<String>.from(user['tags']),
           isSelected: selectedIds.contains(user['id']),
           onTap: () => onSelect(user['id']),
+          onLongPress: () => onEdit(user),
         );
       },
     );
