@@ -149,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -173,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
@@ -309,7 +309,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
@@ -438,7 +438,7 @@ class _MyHomePageState extends State<MyHomePage> {
               crossAxisCount: 2,
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 1.2,
+              childAspectRatio: 1.8,
             ),
             itemCount: _displayedUsers.length,
             itemBuilder: (context, index) {
@@ -468,7 +468,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircleAvatar(
-                          radius: 40,
+                          radius: 35,
                           backgroundColor: theme.colorScheme.primary,
                           child: Text(
                             (user['name']?.isNotEmpty == true ? user['name'][0] : '?').toUpperCase(),
@@ -484,12 +484,16 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: isSelected ? theme.colorScheme.primary : null,
                           ),
                           textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4),
                         Text(
                           user['role'],
                           style: TextStyle(color: theme.colorScheme.secondary),
                           textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4),
                         Text(
