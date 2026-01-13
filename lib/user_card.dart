@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cool_app_fe/app_config/constants.dart';
 
 class UserCard extends StatelessWidget {
   final String name;
@@ -25,6 +27,10 @@ class UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Use proxy URL for images on web to bypass CORS
+    final String imageUrl = kIsWeb
+        ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(avatarUrl)}'
+        : avatarUrl;
     return GestureDetector(
       onTap: onTap,
       onLongPress: onDelete,
@@ -49,7 +55,7 @@ class UserCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundImage: NetworkImage(imageUrl),
                   onBackgroundImageError: (_, __) {},
                   child: Text(
                     name.isNotEmpty ? name[0].toUpperCase() : '?',
