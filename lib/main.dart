@@ -273,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if (result == true) {
       final name = nameController.text.trim();
-      final role = roleController.text.trim();
+      final role = nameController.text.trim();
       final email = emailController.text.trim();
       if (name.isEmpty || role.isEmpty || email.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -327,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return UserCard(
           name: userName,
           location: userEmail,
-          avatarUrl: 'https://i.pravatar.cc/150?img=$userId',
+          avatarUrl: '${Constants.webServiceBaseUrl}/api/proxy?url=${base64Encode('https://i.pravatar.cc/150?img=$userId')}',
           tags: [userRole],
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
