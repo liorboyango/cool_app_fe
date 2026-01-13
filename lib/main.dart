@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -324,10 +325,14 @@ class _MyHomePageState extends State<MyHomePage> {
         final userName = (user['name'] as String?) ?? 'Unknown';
         final userEmail = (user['email'] as String?) ?? '';
         final userRole = (user['role'] as String?) ?? '';
+        final directUrl = 'https://i.pravatar.cc/150?img=$userId';
+        final avatarUrl = kIsWeb 
+          ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(directUrl)}'
+          : directUrl;
         return UserCard(
           name: userName,
           location: userEmail,
-          avatarUrl: 'https://i.pravatar.cc/150?img=$userId',
+          avatarUrl: avatarUrl,
           tags: [userRole],
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
