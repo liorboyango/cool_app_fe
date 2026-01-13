@@ -327,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return UserCard(
           name: userName,
           location: userEmail,
-          avatarUrl: '${Constants.webServiceBaseUrl}/api/proxy?url=${base64Encode('https://i.pravatar.cc/150?img=$userId')}',
+          avatarUrl: '${Constants.webServiceBaseUrl}/api/proxy?url=${base64Encode(utf8.encode('https://i.pravatar.cc/150?img=$userId'))}',
           tags: [userRole],
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
