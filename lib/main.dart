@@ -10,6 +10,8 @@ import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
+import 'gender_filter.dart';
+import 'sort_header.dart';
 
 void main() {
   runApp(
@@ -54,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String _searchQuery = '';
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
+  String _genderFilter = 'all';
+  bool _sortAsc = true;
 
   @override
   void initState() {
@@ -93,8 +97,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchUsers() async {
+    final sortParam = 'name:${_sortAsc ? 'asc' : 'desc'}';
+    final genderParam = _genderFilter;
+    final url = '${Constants.webServiceBaseUrl}/api/users?sort=$sortParam&gender=$genderParam';
     try {
-      final response = await http.get(Uri.parse('${Constants.webServiceBaseUrl}/api/users'));
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -112,19 +119,11 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  List<dynamic> _getFilteredUsers(String? role) {
+  List<dynamic> _getFilteredUsers() {
     var filtered = List<dynamic>.from(_users);
-    if (role != null) {
-      filtered = filtered.where((u) => u['role'] == role).toList();
-    }
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
     }
-    filtered.sort((a, b) {
-      final roleComp = ((a['role'] as String?) ?? '').compareTo((b['role'] as String?) ?? '');
-      if (roleComp != 0) return roleComp;
-      return ((a['name'] as String?) ?? '').compareTo((b['name'] as String?) ?? '');
-    });
     return filtered;
   }
 
@@ -233,6 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final nameController = TextEditingController(text: (user?['name'] as String?) ?? '');
     final roleController = TextEditingController(text: (user?['role'] as String?) ?? '');
     final emailController = TextEditingController(text: (user?['email'] as String?) ?? '');
+    String gender = (user?['gender'] as String?) ?? 'male';
     final isEdit = user != null;
 
     final result = await showDialog<bool>(
@@ -255,6 +255,12 @@ class _MyHomePageState extends State<MyHomePage> {
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
+              ),
+              DropdownButtonFormField<String>(
+                value: gender,
+                decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc)),
+                items: ['male', 'female'].map((g) => DropdownMenuItem(value: g, child: Text(g[0].toUpperCase() + g.substring(1)))).toList(),
+                onChanged: (value) => gender = value!,
               ),
             ],
           ),
@@ -283,7 +289,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return;
       }
       try {
-        final body = json.encode({'name': name, 'role': role, 'email': email});
+        final body = json.encode({'name': name, 'role': role, 'email': email, 'gender': gender});
         final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
@@ -309,15 +315,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Widget _buildUserGrid(List<dynamic> users) {
-    return GridView.builder(
+  Widget _buildUserList(List<dynamic> users) {
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : MediaQuery.of(context).size.width > 600 ? 2 : 1,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.8,
-      ),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
@@ -325,6 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
         final userName = (user['name'] as String?) ?? 'Unknown';
         final userEmail = (user['email'] as String?) ?? '';
         final userRole = (user['role'] as String?) ?? '';
+        final userGender = (user['gender'] as String?) ?? 'male';
         final directUrl = 'https://i.pravatar.cc/150?img=$userId';
         final avatarUrl = kIsWeb 
           ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(directUrl)}'
@@ -334,6 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
           location: userEmail,
           avatarUrl: avatarUrl,
           tags: [userRole],
+          gender: userGender,
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
             setState(() {
@@ -359,115 +361,119 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final roles = _users.map((u) => (u['role'] as String?) ?? '').toSet().where((r) => r.isNotEmpty).toList();
-    return DefaultTabController(
-      length: roles.length + 1,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: 'Settings',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        color: theme.scaffoldBackgroundColor,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info, color: theme.colorScheme.primary),
+                      const SizedBox(width: 16),
+                      Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
+                    ],
                   ),
-                );
-              },
+                ),
+              ),
             ),
-          ],
-        ),
-        body: Container(
-          color: theme.scaffoldBackgroundColor,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info, color: theme.colorScheme.primary),
-                        const SizedBox(width: 16),
-                        Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
-                      ],
-                    ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _fetchServerStatus,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Refresh Status'),
                   ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _fetchServerStatus,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Refresh Status'),
-                    ),
-                    const SizedBox(width: 16),
-                    ElevatedButton.icon(
-                      onPressed: _fetchUsers,
-                      icon: const Icon(Icons.people),
-                      label: const Text('Refresh Users'),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    labelText: 'Search by name or email',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () => _searchController.clear(),
-                          )
-                        : null,
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: _fetchUsers,
+                    icon: const Icon(Icons.people),
+                    label: const Text('Refresh Users'),
                   ),
-                ),
-              ),
-              TabBar(
-                tabs: [
-                  const Tab(text: 'All'),
-                  ...roles.map((role) => Tab(text: role)),
                 ],
               ),
-              if (_selectedUserIds.isNotEmpty) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton.icon(
-                    onPressed: _confirmDeleteSelected,
-                    icon: const Icon(Icons.delete_forever),
-                    label: Text('Delete Selected (${_selectedUserIds.length})'),
-                    style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
-                  ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search by name or email',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => _searchController.clear(),
+                        )
+                      : null,
                 ),
-              ],
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildUserGrid(_getFilteredUsers(null)),
-                    ...roles.map((role) => _buildUserGrid(_getFilteredUsers(role))),
-                  ],
+              ),
+            ),
+            GenderFilter(
+              selected: _genderFilter,
+              onChanged: (value) {
+                setState(() {
+                  _genderFilter = value;
+                });
+                _fetchUsers();
+              },
+            ),
+            const SizedBox(height: 8),
+            SortHeader(
+              isAsc: _sortAsc,
+              onTap: () {
+                setState(() {
+                  _sortAsc = !_sortAsc;
+                });
+                _fetchUsers();
+              },
+            ),
+            if (_selectedUserIds.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: ElevatedButton.icon(
+                  onPressed: _confirmDeleteSelected,
+                  icon: const Icon(Icons.delete_forever),
+                  label: Text('Delete Selected (${_selectedUserIds.length})'),
+                  style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
                 ),
               ),
             ],
-          ),
+            Expanded(
+              child: _buildUserList(_getFilteredUsers()),
+            ),
+          ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showUserDialog(),
-          icon: const Icon(Icons.add),
-          label: const Text('Add User'),
-        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showUserDialog(),
+        icon: const Icon(Icons.add),
+        label: const Text('Add User'),
       ),
     );
   }
