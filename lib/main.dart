@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'app_config/constants.dart';
 import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
+import 'user_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
 import 'gender_filter.dart';
@@ -15,8 +16,11 @@ import 'sort_header.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (context) => UserNotifier()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -52,25 +56,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Fetching...';
-  List<dynamic> _users = [];
-  String _searchQuery = '';
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
-  String _genderFilter = 'all';
-  bool _sortAsc = true;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _searchController.addListener(_updateSearchQuery);
+    _searchController.addListener(() {
+      final userNotifier = context.read<UserNotifier>();
+      userNotifier.setSearch(_searchController.text);
+    });
     _fetchServerStatus();
-    _fetchUsers();
-  }
-
-  void _updateSearchQuery() {
-    _searchQuery = _searchController.text;
-    setState(() {});
+    context.read<UserNotifier>().fetchUsers();
   }
 
   Future<void> _fetchServerStatus() async {
@@ -96,84 +94,24 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _fetchUsers() async {
-    final sortParam = 'name:${_sortAsc ? 'asc' : 'desc'}';
-    final genderParam = _genderFilter;
-    final url = '${Constants.webServiceBaseUrl}/api/users?sort=$sortParam&gender=$genderParam';
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _users = data;
-        });
-      } else {
-        setState(() {
-          _users = [];
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _users = [];
-      });
-    }
-  }
-
-  List<dynamic> _getFilteredUsers() {
-    var filtered = List<dynamic>.from(_users);
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-    }
-    return filtered;
-  }
-
   Future<void> _deleteUser(int id) async {
-    try {
-      final response = await http.delete(Uri.parse('${Constants.webServiceBaseUrl}/api/users/$id'));
-      if (response.statusCode == 200) {
-        await _fetchUsers();
-        setState(() {
-          _selectedUserIds.remove(id);
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete user')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
+    await context.read<UserNotifier>().deleteUser(id);
+    setState(() {
+      _selectedUserIds.remove(id);
+    });
   }
 
   Future<void> _deleteUsers(List<int> ids) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('${Constants.webServiceBaseUrl}/api/users'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'ids': ids}),
-      );
-      if (response.statusCode == 200) {
-        await _fetchUsers();
-        setState(() {
-          _selectedUserIds.clear();
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete users')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
+    await context.read<UserNotifier>().deleteUsers(ids);
+    setState(() {
+      _selectedUserIds.clear();
+    });
   }
 
   void _confirmDeleteSelected() {
     final theme = Theme.of(context);
-    final selectedUsers = _users.where((u) => _selectedUserIds.contains(u['id'])).toList();
+    final userNotifier = context.read<UserNotifier>();
+    final selectedUsers = userNotifier.filteredUsers.where((u) => _selectedUserIds.contains(u['id'])).toList();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -251,8 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
               TextField(
                 controller: roleController,
                 decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.work)),
-              ),
-              TextField(
+              ),n              TextField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
               ),
@@ -288,25 +225,16 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         return;
       }
+      final userData = {'name': name, 'role': role, 'email': email, 'gender': gender};
       try {
-        final body = json.encode({'name': name, 'role': role, 'email': email, 'gender': gender});
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
-        final method = isEdit ? http.put : http.post;
-        final response = await method(
-          Uri.parse(url),
-          headers: {'Content-Type': 'application/json'},
-          body: body,
-        );
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          await _fetchUsers();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
-          );
+        if (isEdit) {
+          await context.read<UserNotifier>().updateUser(user!['id'], userData);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save user')),
-          );
+          await context.read<UserNotifier>().addUser(userData);
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -327,7 +255,7 @@ class _MyHomePageState extends State<MyHomePage> {
         final userRole = (user['role'] as String?) ?? '';
         final userGender = (user['gender'] as String?) ?? 'male';
         final directUrl = 'https://i.pravatar.cc/150?img=$userId';
-        final avatarUrl = kIsWeb 
+        final avatarUrl = kIsWeb
           ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(directUrl)}'
           : directUrl;
         return UserCard(
@@ -410,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
-                    onPressed: _fetchUsers,
+                    onPressed: () => context.read<UserNotifier>().fetchUsers(),
                     icon: const Icon(Icons.people),
                     label: const Text('Refresh Users'),
                   ),
@@ -434,24 +362,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
-            GenderFilter(
-              selected: _genderFilter,
-              onChanged: (value) {
-                setState(() {
-                  _genderFilter = value;
-                });
-                _fetchUsers();
-              },
+            Consumer<UserNotifier>(
+              builder: (context, userNotifier, child) => GenderFilter(
+                selected: userNotifier.genderFilter,
+                onChanged: userNotifier.setGenderFilter,
+              ),
             ),
             const SizedBox(height: 8),
-            SortHeader(
-              isAsc: _sortAsc,
-              onTap: () {
-                setState(() {
-                  _sortAsc = !_sortAsc;
-                });
-                _fetchUsers();
-              },
+            Consumer<UserNotifier>(
+              builder: (context, userNotifier, child) => SortHeader(
+                selected: userNotifier.sortBy,
+                onChanged: userNotifier.setSort,
+              ),
             ),
             if (_selectedUserIds.isNotEmpty) ...[
               Padding(
@@ -465,7 +387,17 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
             Expanded(
-              child: _buildUserList(_getFilteredUsers()),
+              child: Consumer<UserNotifier>(
+                builder: (context, userNotifier, child) {
+                  if (userNotifier.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (userNotifier.filteredUsers.isEmpty) {
+                    return const Center(child: Text('No users found'));
+                  }
+                  return _buildUserList(userNotifier.filteredUsers);
+                },
+              ),
             ),
           ],
         ),
