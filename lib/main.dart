@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -10,14 +11,18 @@ import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
-import 'gender_filter.dart';
-import 'sort_header.dart';
+import 'widgets/filter_controls.dart';
+import 'providers/users_provider.dart';
+import 'providers/filtered_users_provider.dart';
+import 'models/user.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeNotifier(),
-      child: const MyApp(),
+    ProviderScope(
+      child: ChangeNotifierProvider(
+        create: (context) => ThemeNotifier(),
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -41,36 +46,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  ConsumerState<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends ConsumerState<MyHomePage> {
   String _status = 'Fetching...';
-  List<dynamic> _users = [];
-  String _searchQuery = '';
-  late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
-  String _genderFilter = 'all';
-  bool _sortAsc = true;
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
-    _searchController.addListener(_updateSearchQuery);
     _fetchServerStatus();
-    _fetchUsers();
-  }
-
-  void _updateSearchQuery() {
-    _searchQuery = _searchController.text;
-    setState(() {});
   }
 
   Future<void> _fetchServerStatus() async {
@@ -82,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
+          _status = 'Status: ${data['status']}, Time: ${data['timestamp']};
         });
       } else {
         setState(() {
@@ -96,84 +88,44 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _fetchUsers() async {
-    final sortParam = 'name:${_sortAsc ? 'asc' : 'desc'}';
-    final genderParam = _genderFilter;
-    final url = '${Constants.webServiceBaseUrl}/api/users?sort=$sortParam&gender=$genderParam';
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _users = data;
-        });
-      } else {
-        setState(() {
-          _users = [];
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _users = [];
-      });
-    }
-  }
-
-  List<dynamic> _getFilteredUsers() {
-    var filtered = List<dynamic>.from(_users);
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-    }
-    return filtered;
-  }
-
   Future<void> _deleteUser(int id) async {
     try {
-      final response = await http.delete(Uri.parse('${Constants.webServiceBaseUrl}/api/users/$id'));
-      if (response.statusCode == 200) {
-        await _fetchUsers();
-        setState(() {
-          _selectedUserIds.remove(id);
-        });
-      } else {
+      await ref.read(usersNotifierProvider.notifier).deleteUser(id);
+      setState(() {
+        _selectedUserIds.remove(id);
+      });
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete user')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
     }
   }
 
   Future<void> _deleteUsers(List<int> ids) async {
     try {
-      final response = await http.delete(
-        Uri.parse('${Constants.webServiceBaseUrl}/api/users'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'ids': ids}),
-      );
-      if (response.statusCode == 200) {
-        await _fetchUsers();
-        setState(() {
-          _selectedUserIds.clear();
-        });
-      } else {
+      await ref.read(usersNotifierProvider.notifier).deleteUsers(ids);
+      setState(() {
+        _selectedUserIds.clear();
+      });
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete users')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
     }
   }
 
   void _confirmDeleteSelected() {
     final theme = Theme.of(context);
-    final selectedUsers = _users.where((u) => _selectedUserIds.contains(u['id'])).toList();
+    final usersAsync = ref.watch(usersNotifierProvider);
+    final users = usersAsync.maybeWhen(
+      data: (data) => data,
+      orElse: () => <User>[],
+    );
+    final selectedUsers = users.where((u) => _selectedUserIds.contains(u.id)).toList();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -192,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _deleteUsers(selectedUsers.map((u) => u['id'] as int).toList());
+                await _deleteUsers(selectedUsers.map((u) => u.id).toList());
               },
               style: ElevatedButton.styleFrom(backgroundColor: theme.colorScheme.error),
             ),
@@ -202,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Future<bool> _confirmDeleteSwipe(dynamic user) async {
+  Future<bool> _confirmDeleteSwipe(User user) async {
     final theme = Theme.of(context);
     bool? result = await showDialog<bool>(
       context: context,
@@ -210,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           icon: Icon(Icons.warning, color: theme.colorScheme.error),
           title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to delete ${(user['name'] as String?) ?? 'Unknown'} forever?'),
+          content: Text('Are you sure you want to delete ${user.name} forever?'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -228,11 +180,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return result ?? false;
   }
 
-  Future<void> _showUserDialog({Map<String, dynamic>? user}) async {
-    final nameController = TextEditingController(text: (user?['name'] as String?) ?? '');
-    final roleController = TextEditingController(text: (user?['role'] as String?) ?? '');
-    final emailController = TextEditingController(text: (user?['email'] as String?) ?? '');
-    String gender = (user?['gender'] as String?) ?? 'male';
+  Future<void> _showUserDialog({User? user}) async {
+    final nameController = TextEditingController(text: user?.name ?? '');
+    final roleController = TextEditingController(text: user?.role ?? '');
+    final emailController = TextEditingController(text: user?.email ?? '');
+    String gender = user?.gender ?? 'male';
     final isEdit = user != null;
 
     final result = await showDialog<bool>(
@@ -288,23 +240,23 @@ class _MyHomePageState extends State<MyHomePage> {
         );
         return;
       }
+      final newUser = User(
+        id: user?.id ?? 0, // Will be ignored for add
+        name: name,
+        role: role,
+        email: email,
+        gender: gender,
+      );
       try {
-        final body = json.encode({'name': name, 'role': role, 'email': email, 'gender': gender});
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
-        final method = isEdit ? http.put : http.post;
-        final response = await method(
-          Uri.parse(url),
-          headers: {'Content-Type': 'application/json'},
-          body: body,
-        );
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          await _fetchUsers();
+        if (isEdit) {
+          await ref.read(usersNotifierProvider.notifier).updateUser(newUser);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
+            const SnackBar(content: Text('User updated')),
           );
         } else {
+          await ref.read(usersNotifierProvider.notifier).addUser(newUser);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save user')),
+            const SnackBar(content: Text('User added')),
           );
         }
       } catch (e) {
@@ -315,34 +267,29 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Widget _buildUserList(List<dynamic> users) {
+  Widget _buildUserList(List<User> users) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
-        final userId = (user['id'] as int?) ?? 0;
-        final userName = (user['name'] as String?) ?? 'Unknown';
-        final userEmail = (user['email'] as String?) ?? '';
-        final userRole = (user['role'] as String?) ?? '';
-        final userGender = (user['gender'] as String?) ?? 'male';
-        final directUrl = 'https://i.pravatar.cc/150?img=$userId';
-        final avatarUrl = kIsWeb 
+        final directUrl = 'https://i.pravatar.cc/150?img=${user.id}';
+        final avatarUrl = kIsWeb
           ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(directUrl)}'
           : directUrl;
         return UserCard(
-          name: userName,
-          location: userEmail,
+          name: user.name,
+          location: user.email,
           avatarUrl: avatarUrl,
-          tags: [userRole],
-          gender: userGender,
-          isSelected: _selectedUserIds.contains(userId),
+          tags: [user.role],
+          gender: user.gender,
+          isSelected: _selectedUserIds.contains(user.id),
           onTap: () {
             setState(() {
-              if (_selectedUserIds.contains(userId)) {
-                _selectedUserIds.remove(userId);
+              if (_selectedUserIds.contains(user.id)) {
+                _selectedUserIds.remove(user.id);
               } else {
-                _selectedUserIds.add(userId);
+                _selectedUserIds.add(user.id);
               }
             });
           },
@@ -350,7 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onDelete: () async {
             final confirmed = await _confirmDeleteSwipe(user);
             if (confirmed) {
-              await _deleteUser(userId);
+              await _deleteUser(user.id);
             }
           },
         );
@@ -361,6 +308,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final filteredUsers = ref.watch(filteredUsersProvider);
+    final usersAsync = ref.watch(usersNotifierProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -410,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
-                    onPressed: _fetchUsers,
+                    onPressed: usersAsync.isLoading ? null : () => ref.invalidate(usersNotifierProvider),
                     icon: const Icon(Icons.people),
                     label: const Text('Refresh Users'),
                   ),
@@ -419,39 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Search by name or email',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () => _searchController.clear(),
-                        )
-                      : null,
-                ),
-              ),
-            ),
-            GenderFilter(
-              selected: _genderFilter,
-              onChanged: (value) {
-                setState(() {
-                  _genderFilter = value;
-                });
-                _fetchUsers();
-              },
-            ),
-            const SizedBox(height: 8),
-            SortHeader(
-              isAsc: _sortAsc,
-              onTap: () {
-                setState(() {
-                  _sortAsc = !_sortAsc;
-                });
-                _fetchUsers();
-              },
+              child: FilterControls(),
             ),
             if (_selectedUserIds.isNotEmpty) ...[
               Padding(
@@ -465,7 +383,11 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
             Expanded(
-              child: _buildUserList(_getFilteredUsers()),
+              child: usersAsync.when(
+                data: (_) => _buildUserList(filteredUsers),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(child: Text('Error: $error')),
+              ),
             ),
           ],
         ),
@@ -476,11 +398,5 @@ class _MyHomePageState extends State<MyHomePage> {
         label: const Text('Add User'),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }
