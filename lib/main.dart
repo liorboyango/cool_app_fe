@@ -10,8 +10,8 @@ import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
-import 'gender_filter.dart';
-import 'sort_header.dart';
+import 'widgets/filter_sort_bar.dart';
+import 'mixins/filter_sort_mixin.dart';
 
 void main() {
   runApp(
@@ -50,27 +50,20 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
   String _status = 'Fetching...';
   List<dynamic> _users = [];
   String _searchQuery = '';
-  late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
-  String _genderFilter = 'all';
-  bool _sortAsc = true;
+  SortOption _sortOption = SortOption.nameAsc;
+  Set<String> _activeFilters = {};
+  List<String> _filterOptions = [];
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
-    _searchController.addListener(_updateSearchQuery);
     _fetchServerStatus();
     _fetchUsers();
-  }
-
-  void _updateSearchQuery() {
-    _searchQuery = _searchController.text;
-    setState(() {});
   }
 
   Future<void> _fetchServerStatus() async {
@@ -97,9 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchUsers() async {
-    final sortParam = 'name:${_sortAsc ? 'asc' : 'desc'}';
-    final genderParam = _genderFilter;
-    final url = '${Constants.webServiceBaseUrl}/api/users?sort=$sortParam&gender=$genderParam';
+    final url = '${Constants.webServiceBaseUrl}/api/users';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -107,6 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           _users = data;
         });
+        _updateFilterOptions();
       } else {
         setState(() {
           _users = [];
@@ -119,12 +111,24 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _updateFilterOptions() {
+    final genders = _users.map((u) => u['gender'] as String).toSet();
+    final roles = _users.map((u) => u['role'] as String).toSet();
+    setState(() {
+      _filterOptions = [...genders, ...roles].toList();
+    });
+  }
+
   List<dynamic> _getFilteredUsers() {
-    var filtered = List<dynamic>.from(_users);
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-    }
-    return filtered;
+    return applyFilterSort(
+      items: _users,
+      query: _searchQuery,
+      filters: _activeFilters,
+      sort: _sortOption,
+      getName: (u) => (u['name'] as String?) ?? '',
+      getEmail: (u) => (u['email'] as String?) ?? '',
+      getCategories: (u) => {(u['gender'] as String?) ?? '', (u['role'] as String?) ?? ''},
+    );
   }
 
   Future<void> _deleteUser(int id) async {
@@ -419,39 +423,15 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Search by name or email',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () => _searchController.clear(),
-                        )
-                      : null,
-                ),
+              child: FilterSortBar(
+                searchQuery: _searchQuery,
+                sortOption: _sortOption,
+                activeFilters: _activeFilters,
+                filterOptions: _filterOptions,
+                onSearchChanged: (q) => setState(() => _searchQuery = q),
+                onSortChanged: (s) => setState(() => _sortOption = s),
+                onFiltersChanged: (f) => setState(() => _activeFilters = f),
               ),
-            ),
-            GenderFilter(
-              selected: _genderFilter,
-              onChanged: (value) {
-                setState(() {
-                  _genderFilter = value;
-                });
-                _fetchUsers();
-              },
-            ),
-            const SizedBox(height: 8),
-            SortHeader(
-              isAsc: _sortAsc,
-              onTap: () {
-                setState(() {
-                  _sortAsc = !_sortAsc;
-                });
-                _fetchUsers();
-              },
             ),
             if (_selectedUserIds.isNotEmpty) ...[
               Padding(
@@ -476,11 +456,5 @@ class _MyHomePageState extends State<MyHomePage> {
         label: const Text('Add User'),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 }
