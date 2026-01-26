@@ -20,6 +20,9 @@ dependencies:
 
   http: ^1.6.0
   provider: ^6.1.5+1
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  dio: ^5.4.0
 
   # Required for json_serializable
   json_annotation: ^4.9.0
@@ -35,6 +38,7 @@ dev_dependencies:
 
   # Automatically generate code for converting to and from JSON
   json_serializable: ^6.11.3
+  riverpod_generator: ^2.3.9
 flutter:
 
   uses-material-design: true
