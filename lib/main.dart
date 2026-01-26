@@ -10,8 +10,8 @@ import 'app_config/app_theme.dart';
 import 'theme_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
-import 'gender_filter.dart';
-import 'sort_header.dart';
+import 'utils/list_filter.dart';
+import 'widgets/filter_sort_bar.dart';
 
 void main() {
   runApp(
@@ -56,21 +56,16 @@ class _MyHomePageState extends State<MyHomePage> {
   String _searchQuery = '';
   late TextEditingController _searchController;
   Set<int> _selectedUserIds = {};
-  String _genderFilter = 'all';
+  String _filterValue = 'All';
+  String _sortField = 'Name';
   bool _sortAsc = true;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _searchController.addListener(_updateSearchQuery);
     _fetchServerStatus();
     _fetchUsers();
-  }
-
-  void _updateSearchQuery() {
-    _searchQuery = _searchController.text;
-    setState(() {});
   }
 
   Future<void> _fetchServerStatus() async {
@@ -97,9 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _fetchUsers() async {
-    final sortParam = 'name:${_sortAsc ? 'asc' : 'desc'}';
-    final genderParam = _genderFilter;
-    final url = '${Constants.webServiceBaseUrl}/api/users?sort=$sortParam&gender=$genderParam';
+    final url = '${Constants.webServiceBaseUrl}/api/users';
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -120,10 +113,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<dynamic> _getFilteredUsers() {
-    var filtered = List<dynamic>.from(_users);
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((u) => ((u['name'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase()) || ((u['email'] as String?) ?? '').toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+    ListFilter listFilter = ListFilter(_users);
+    List filtered = listFilter.search(_searchQuery, (u) => '${u['name'] ?? ''} ${u['email'] ?? ''} ${u['role'] ?? ''}');
+    String genderFilter = _filterValue == 'All' ? 'all' : _filterValue.toLowerCase();
+    if (genderFilter != 'all') {
+      filtered = ListFilter(filtered).filter((u) => u['gender'] == genderFilter);
     }
+    String sortKey = _sortField.toLowerCase();
+    filtered = ListFilter(filtered).sort((u) => (u[sortKey] as String?)?.toLowerCase() ?? '', desc: !_sortAsc);
     return filtered;
   }
 
@@ -361,6 +358,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final filtered = _getFilteredUsers();
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -417,42 +415,51 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            FilterSortBar(
+              searchController: _searchController,
+              sortBy: _sortField,
+              isSortAsc: _sortAsc,
+              filterBy: _filterValue,
+              onSearch: (q) => setState(() => _searchQuery = q),
+              onSort: (s) => setState(() => _sortField = s),
+              onToggleSort: () => setState(() => _sortAsc = !_sortAsc),
+              onFilter: (f) => setState(() => _filterValue = f),
+            ),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Search by name or email',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () => _searchController.clear(),
-                        )
-                      : null,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Showing ${filtered.length} of ${_users.length} items'),
+            ),
+            if (_searchQuery.isNotEmpty || _filterValue != 'All' || _sortField != 'Name' || !_sortAsc) 
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    if (_searchQuery.isNotEmpty) Chip(
+                      label: Text('Search: $_searchQuery'),
+                      onDeleted: () => setState(() => _searchQuery = ''),
+                    ),
+                    if (_filterValue != 'All') Chip(
+                      label: Text('Filter: $_filterValue'),
+                      onDeleted: () => setState(() => _filterValue = 'All'),
+                    ),
+                    if (_sortField != 'Name' || !_sortAsc) Chip(
+                      label: Text('Sort: $_sortField ${_sortAsc ? '↑' : '↓'}'),
+                      onDeleted: () => setState(() { _sortField = 'Name'; _sortAsc = true; }),
+                    ),
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _searchQuery = '';
+                        _filterValue = 'All';
+                        _sortField = 'Name';
+                        _sortAsc = true;
+                        _searchController.clear();
+                      }),
+                      child: const Text('Clear All'),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            GenderFilter(
-              selected: _genderFilter,
-              onChanged: (value) {
-                setState(() {
-                  _genderFilter = value;
-                });
-                _fetchUsers();
-              },
-            ),
-            const SizedBox(height: 8),
-            SortHeader(
-              isAsc: _sortAsc,
-              onTap: () {
-                setState(() {
-                  _sortAsc = !_sortAsc;
-                });
-                _fetchUsers();
-              },
-            ),
             if (_selectedUserIds.isNotEmpty) ...[
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -465,7 +472,29 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
             Expanded(
-              child: _buildUserList(_getFilteredUsers()),
+              child: filtered.isEmpty ? 
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search_off, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16),
+                      const Text('No results found'),
+                      const SizedBox(height: 8),
+                      const Text('Try adjusting your filters'),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _searchQuery = '';
+                          _filterValue = 'All';
+                          _sortField = 'Name';
+                          _sortAsc = true;
+                          _searchController.clear();
+                        }),
+                        child: const Text('Clear Filters'),
+                      ),
+                    ],
+                  ),
+                ) : _buildUserList(filtered),
             ),
           ],
         ),
