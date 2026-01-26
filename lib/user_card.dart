@@ -27,6 +27,7 @@ class UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -54,10 +55,17 @@ class UserCard extends StatelessWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: gender == 'male' ? const Color(0xFFDBEAFE) : const Color(0xFFFCE7F3),
-            borderRadius: BorderRadius.circular(4),
+            color: _getBadgeColor(gender, isDark),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(gender == 'male' ? 'M' : 'F'),
+          child: Text(
+            gender.toLowerCase() == 'male' ? 'M' : 'F',
+            style: TextStyle(
+              color: _getBadgeTextColor(gender, isDark),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
         selected: isSelected,
         onTap: onTap,
@@ -78,5 +86,19 @@ class UserCard extends StatelessWidget {
         style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface),
       ),
     );
+  }
+
+  Color _getBadgeColor(String gender, bool isDark) {
+    if (gender.toLowerCase() == 'female') {
+      return isDark ? const Color(0xFF5C2D4A) : const Color(0xFFFFE0EB);
+    }
+    return isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE0F0FF);
+  }
+
+  Color _getBadgeTextColor(String gender, bool isDark) {
+    if (gender.toLowerCase() == 'female') {
+      return isDark ? const Color(0xFFFFB8D4) : const Color(0xFFAD1457);
+    }
+    return isDark ? const Color(0xFF90CAF9) : const Color(0xFF1565C0);
   }
 }
