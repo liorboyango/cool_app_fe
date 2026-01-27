@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserCard extends StatelessWidget {
   final String name;
@@ -6,6 +7,7 @@ class UserCard extends StatelessWidget {
   final String avatarUrl;
   final List<String> tags;
   final String gender;
+  final String? phoneNumber;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -18,6 +20,7 @@ class UserCard extends StatelessWidget {
     required this.avatarUrl,
     required this.tags,
     required this.gender,
+    this.phoneNumber,
     this.isSelected = false,
     this.onTap,
     this.onEdit,
@@ -50,6 +53,32 @@ class UserCard extends StatelessWidget {
               spacing: 6,
               children: tags.map((tag) => _buildTag(tag, theme)).toList(),
             ),
+            if (phoneNumber != null && phoneNumber!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                phoneNumber!,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _CallButton(
+                    icon: Icons.phone,
+                    color: const Color(0xFF007AFF),
+                    onTap: () => _launchUrl('tel:$phoneNumber'),
+                  ),
+                  const SizedBox(width: 8),
+                  _CallButton(
+                    icon: Icons.chat,
+                    color: const Color(0xFF25D366),
+                    onTap: () => _launchUrl('https://wa.me/${phoneNumber!.replaceAll(RegExp(r'[^0-9]'), '')}'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
         trailing: Container(
@@ -100,5 +129,41 @@ class UserCard extends StatelessWidget {
       return isDark ? const Color(0xFFFFB8D4) : const Color(0xFFAD1457);
     }
     return isDark ? const Color(0xFF90CAF9) : const Color(0xFF1565C0);
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+}
+
+class _CallButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CallButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
   }
 }

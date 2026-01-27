@@ -236,6 +236,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
     final nameController = TextEditingController(text: (user?['name'] as String?) ?? '');
     final roleController = TextEditingController(text: (user?['role'] as String?) ?? '');
     final emailController = TextEditingController(text: (user?['email'] as String?) ?? '');
+    final phoneController = TextEditingController(text: (user?['phoneNumber'] as String?) ?? '');
     String gender = (user?['gender'] as String?) ?? 'male';
     final isEdit = user != null;
 
@@ -259,6 +260,10 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
+              ),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone)),
               ),
               DropdownButtonFormField<String>(
                 value: gender,
@@ -286,14 +291,15 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
       final name = nameController.text.trim();
       final role = roleController.text.trim();
       final email = emailController.text.trim();
+      final phoneNumber = phoneController.text.trim().isEmpty ? null : phoneController.text.trim();
       if (name.isEmpty || role.isEmpty || email.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All fields are required')),
+          const SnackBar(content: Text('Name, role, and email are required')),
         );
         return;
       }
       try {
-        final body = json.encode({'name': name, 'role': role, 'email': email, 'gender': gender});
+        final body = json.encode({'name': name, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': gender});
         final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
@@ -330,6 +336,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
         final userEmail = (user['email'] as String?) ?? '';
         final userRole = (user['role'] as String?) ?? '';
         final userGender = (user['gender'] as String?) ?? 'male';
+        final userPhone = (user['phoneNumber'] as String?) ?? null;
         final directUrl = 'https://i.pravatar.cc/150?img=$userId';
         final avatarUrl = kIsWeb 
           ? '${Constants.webServiceBaseUrl}/proxy/image?url=${Uri.encodeComponent(directUrl)}'
@@ -340,6 +347,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
           avatarUrl: avatarUrl,
           tags: [userRole],
           gender: userGender,
+          phoneNumber: userPhone,
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
             setState(() {
