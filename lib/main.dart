@@ -192,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
                 Navigator.of(context).pop();
               },
             ),
-            ElevatedButton(
+              ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
@@ -239,51 +239,76 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
     final phoneController = TextEditingController(text: (user?['phoneNumber'] as String?) ?? '');
     String gender = (user?['gender'] as String?) ?? 'male';
     final isEdit = user != null;
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
 
     final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isEdit ? 'Edit User' : 'Add User'),
-        icon: Icon(isEdit ? Icons.edit : Icons.add, color: Theme.of(context).colorScheme.primary),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Name', prefixIcon: Icon(Icons.person)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(isEdit ? 'Edit User' : 'Add User'),
+          icon: Icon(isEdit ? Icons.edit : Icons.add, color: Theme.of(context).colorScheme.primary),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Name', prefixIcon: Icon(Icons.person)),
+                    validator: (value) => value?.trim().isEmpty ?? true ? 'Name is required' : null,
+                  ),
+                  TextFormField(
+                    controller: roleController,
+                    decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.work)),
+                    validator: (value) => value?.trim().isEmpty ?? true ? 'Role is required' : null,
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
+                    validator: (value) => value?.trim().isEmpty ?? true ? 'Email is required' : null,
+                  ),
+                  TextFormField(
+                    controller: phoneController,
+                    decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone), hintText: '+1234567890'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      final cleaned = value.replaceAll(RegExp(r'[ \s\-\(\)\[\]]'), '');
+                      final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
+                      if (!regex.hasMatch(cleaned)) {
+                        return 'Invalid phone format';
+                      }
+                      return null;
+                    },
+                  ),
+                  DropdownButtonFormField<String>(
+                    value: gender,
+                    decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc)),
+                    items: ['male', 'female'].map((g) => DropdownMenuItem(value: g, child: Text(g[0].toUpperCase() + g.substring(1)))).toList(),
+                    onChanged: (value) => setState(() => gender = value!),
+                    validator: (value) => value == null ? 'Gender is required' : null,
+                  ),
+                ],
               ),
-              TextField(
-                controller: roleController,
-                decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.work)),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
-              ),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone)),
-              ),
-              DropdownButtonFormField<String>(
-                value: gender,
-                decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc)),
-                items: ['male', 'female'].map((g) => DropdownMenuItem(value: g, child: Text(g[0].toUpperCase() + g.substring(1)))).toList(),
-                onChanged: (value) => gender = value!,
-              ),
-            ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: isLoading ? null : () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                if (formKey.currentState!.validate()) {
+                  setState(() => isLoading = true);
+                  Navigator.of(context).pop(true);
+                }
+              },
+              child: isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(isEdit ? 'Update' : 'Add'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(isEdit ? 'Update' : 'Add'),
-          ),
-        ],
       ),
     );
 
@@ -292,12 +317,6 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
       final role = roleController.text.trim();
       final email = emailController.text.trim();
       final phoneNumber = phoneController.text.trim().isEmpty ? null : phoneController.text.trim();
-      if (name.isEmpty || role.isEmpty || email.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Name, role, and email are required')),
-        );
-        return;
-      }
       try {
         final body = json.encode({'name': name, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': gender});
         final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!['id']}' : '${Constants.webServiceBaseUrl}/api/users';

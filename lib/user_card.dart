@@ -81,20 +81,33 @@ class UserCard extends StatelessWidget {
             ],
           ],
         ),
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: _getBadgeColor(gender, isDark),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            gender.toLowerCase() == 'male' ? 'M' : 'F',
-            style: TextStyle(
-              color: _getBadgeTextColor(gender, isDark),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _getBadgeColor(gender, isDark),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                gender.toLowerCase() == 'male' ? 'M' : 'F',
+                style: TextStyle(
+                  color: _getBadgeTextColor(gender, isDark),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-          ),
+            if (onEdit != null) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed: onEdit,
+                tooltip: 'Edit user',
+              ),
+            ],
+          ],
         ),
         selected: isSelected,
         onTap: onTap,
