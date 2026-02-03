@@ -191,8 +191,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-            },
-              ElevatedButton(
+            ),
+            ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
@@ -274,8 +274,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
                     decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone), hintText: '+1234567890'),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return null;
-                      final cleaned = value.replaceAll(RegExp(r'[ \s\-\(\)\[\]]'), '');
-                      final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
+                      final cleaned = value.replaceAll(RegExp(r'[\s\-\\(\\)\\[\\]]'), '');
+                      final regex = RegExp(r'^\\+?[1-9]\\d{6,14}\$');
                       if (!regex.hasMatch(cleaned)) {
                         return 'Invalid phone format';
                       }
@@ -408,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
                 ),
               );
             },
-          },
+          ),
         ],
       ),
       body: Container(
