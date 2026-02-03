@@ -18,7 +18,7 @@ class UserCard extends StatelessWidget {
   const UserCard({
     super.key,
     required this.name,
-    required this.location,
+    this.location = '',
     required this.avatarUrl,
     required this.tags,
     required this.gender,

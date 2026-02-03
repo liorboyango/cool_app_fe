@@ -191,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-            ),
+            },
               ElevatedButton(
               child: const Text('Delete'),
               onPressed: () async {
@@ -362,10 +362,11 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
           : directUrl;
         return UserCard(
           name: userName,
-          location: userEmail,
+          location: '',
           avatarUrl: avatarUrl,
           tags: [userRole],
           gender: userGender,
+          email: userEmail,
           phoneNumber: userPhone,
           isSelected: _selectedUserIds.contains(userId),
           onTap: () {
@@ -407,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
                 ),
               );
             },
-          ),
+          },
         ],
       ),
       body: Container(
