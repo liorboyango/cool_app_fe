@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserCard extends StatelessWidget {
-  final String name;
+  final String firstName;
+  final String lastName;
   final String location;
   final String avatarUrl;
   final List<String> tags;
@@ -17,7 +18,8 @@ class UserCard extends StatelessWidget {
 
   const UserCard({
     super.key,
-    required this.name,
+    required this.firstName,
+    required this.lastName,
     this.location = '',
     required this.avatarUrl,
     required this.tags,
@@ -30,6 +32,8 @@ class UserCard extends StatelessWidget {
     this.onEdit,
     this.onDelete,
   });
+
+  String get fullName => '$firstName $lastName'.trim();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +54,7 @@ class UserCard extends StatelessWidget {
                 backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                 backgroundColor: avatarUrl.isNotEmpty ? null : theme.colorScheme.primary,
                 child: avatarUrl.isNotEmpty ? null : Text(
-                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                  firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
                   style: TextStyle(
                     color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.bold,
@@ -63,7 +67,7 @@ class UserCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: theme.textTheme.titleMedium),
+                    Text(fullName, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 4),
                     if (location.isNotEmpty) Text(location),
                     // Tappable email address
