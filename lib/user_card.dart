@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserCard extends StatelessWidget {
@@ -10,6 +11,7 @@ class UserCard extends StatelessWidget {
   final String gender;
   final String email;
   final String? phoneNumber;
+  final String? linkedinUrl;
   final String? facebookUrl;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -26,6 +28,7 @@ class UserCard extends StatelessWidget {
     required this.gender,
     required this.email,
     this.phoneNumber,
+    this.linkedinUrl,
     this.facebookUrl,
     this.isSelected = false,
     this.onTap,
@@ -112,6 +115,19 @@ class UserCard extends StatelessWidget {
                             onTap: () => _launchUrl('https://wa.me/${phoneNumber!.replaceAll(RegExp(r'[^0-9]'), '')}'),
                           ),
                         ],
+                      ),
+                    ],
+                    // LinkedIn button
+                    if (linkedinUrl != null && linkedinUrl!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _launchUrl(linkedinUrl!),
+                        icon: const FaIcon(FontAwesomeIcons.linkedinIn, size: 20),
+                        label: const Text('LinkedIn'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0A66C2),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ],
                     // Facebook button
