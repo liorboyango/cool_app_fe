@@ -1,13 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-
-part 'user.g.dart';
-
-@JsonSerializable()
 class User {
   final int id;
-  @JsonKey(name: 'firstName')
   final String firstName;
-  @JsonKey(name: 'lastName')
   final String lastName;
   final String role;
   final String email;
@@ -26,9 +19,27 @@ class User {
     this.linkedinUrl,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  factory User.fromJson(Map<String, dynamic> json) => User(
+        id: json['id'] as int,
+        firstName: json['firstName'] as String,
+        lastName: json['lastName'] as String,
+        role: json['role'] as String,
+        email: json['email'] as String,
+        gender: json['gender'] as String,
+        phoneNumber: json['phoneNumber'] as String?,
+        linkedinUrl: json['linkedinUrl'] as String?,
+      );
 
-  Map<String, dynamic> toJson() => _$UserToJson(this);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'firstName': firstName,
+        'lastName': lastName,
+        'role': role,
+        'email': email,
+        'gender': gender,
+        'phoneNumber': phoneNumber,
+        'linkedinUrl': linkedinUrl,
+      };
 
   String get fullName => '$firstName $lastName'.trim();
 }
