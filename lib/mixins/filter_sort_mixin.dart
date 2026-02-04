@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 
-enum SortOption { nameAsc, nameDesc, emailAsc, emailDesc }
+enum SortOption {
+  firstAsc,
+  firstDesc,
+  lastAsc,
+  lastDesc,
+  fullAsc,
+  fullDesc,
+  emailAsc,
+  emailDesc
+}
 
 mixin FilterSortMixin<T> {
   List<T> applyFilterSort({
@@ -8,13 +17,17 @@ mixin FilterSortMixin<T> {
     required String query,
     required Set<String> filters,
     required SortOption sort,
-    required String Function(T) getName,
+    required String Function(T) getFirstName,
+    required String Function(T) getLastName,
+    required String Function(T) getFullName,
     required String Function(T) getEmail,
     required Set<String> Function(T) getCategories,
   }) {
     var result = items.where((item) {
       final matchesQuery = query.isEmpty ||
-          getName(item).toLowerCase().contains(query.toLowerCase()) ||
+          getFirstName(item).toLowerCase().contains(query.toLowerCase()) ||
+          getLastName(item).toLowerCase().contains(query.toLowerCase()) ||
+          getFullName(item).toLowerCase().contains(query.toLowerCase()) ||
           getEmail(item).toLowerCase().contains(query.toLowerCase());
       final matchesFilter =
           filters.isEmpty || filters.any((f) => getCategories(item).contains(f));
@@ -23,10 +36,18 @@ mixin FilterSortMixin<T> {
 
     result.sort((a, b) {
       switch (sort) {
-        case SortOption.nameAsc:
-          return getName(a).compareTo(getName(b));
-        case SortOption.nameDesc:
-          return getName(b).compareTo(getName(a));
+        case SortOption.firstAsc:
+          return getFirstName(a).compareTo(getFirstName(b));
+        case SortOption.firstDesc:
+          return getFirstName(b).compareTo(getFirstName(a));
+        case SortOption.lastAsc:
+          return getLastName(a).compareTo(getLastName(b));
+        case SortOption.lastDesc:
+          return getLastName(b).compareTo(getLastName(a));
+        case SortOption.fullAsc:
+          return getFullName(a).compareTo(getFullName(b));
+        case SortOption.fullDesc:
+          return getFullName(b).compareTo(getFullName(a));
         case SortOption.emailAsc:
           return getEmail(a).compareTo(getEmail(b));
         case SortOption.emailDesc:
