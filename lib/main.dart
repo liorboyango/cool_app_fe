@@ -51,7 +51,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
+class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
   String _status = 'Fetching...';
   List<User> _users = [];
   String _searchQuery = '';
@@ -283,8 +283,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin {
                     decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone), hintText: '+1234567890'),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return null;
-                      final cleaned = value.replaceAll(RegExp(r'[\s\-\\(\)\[\]]'), '');
-                      final regex = RegExp(r'^\\+?[1-9]\\d{6,14}\$');
+                      final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\[\]]'), '');
+                      final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
                       if (!regex.hasMatch(cleaned)) {
                         return 'Invalid phone format';
                       }
