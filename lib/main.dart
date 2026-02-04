@@ -304,8 +304,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return null;
-                      final cleaned = value.replaceAll(RegExp(r'[
-                      final regex = RegExp(r'^
+                      final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\[\]]'), '');
+                      final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
                       if (!regex.hasMatch(cleaned)) {
                         return 'Invalid phone format';
                       }
@@ -465,7 +465,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+                children: [
                   ElevatedButton.icon(
                     onPressed: _fetchServerStatus,
                     icon: const Icon(Icons.refresh),
