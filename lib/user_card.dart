@@ -118,14 +118,11 @@ class UserCard extends StatelessWidget {
                     // LinkedIn button
                     if (linkedinUrl != null && linkedinUrl!.isNotEmpty) ...[
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(linkedinUrl!),
+                      IconButton(
                         icon: const FaIcon(FontAwesomeIcons.linkedin, size: 20),
-                        label: const Text('LinkedIn'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0A66C2),
-                          foregroundColor: Colors.white,
-                        ),
+                        color: const Color(0xFF0A66C2),
+                        onPressed: () => _launchUrl(linkedinUrl!),
+                        tooltip: 'LinkedIn',
                       ),
                     ],
                   ],
@@ -196,11 +193,11 @@ class UserCard extends StatelessWidget {
   }
 
   Future<void> _launchUrl(String url) async {
-    if (!url.startsWith('https://')) {
-      // For security, only launch HTTPS URLs
+    final allowedSchemes = ['https', 'mailto', 'tel'];
+    final uri = Uri.tryParse(url);
+    if (uri == null || !allowedSchemes.contains(uri.scheme)) {
       return;
     }
-    final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
