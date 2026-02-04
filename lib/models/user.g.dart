@@ -1,8 +1,10 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-import 'package:json_annotation/json_annotation.dart';
+part of 'user.dart';
 
-part 'user.g.dart';
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as int,
