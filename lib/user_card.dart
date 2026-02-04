@@ -11,7 +11,6 @@ class UserCard extends StatelessWidget {
   final String gender;
   final String email;
   final String? phoneNumber;
-  final String? facebookUrl;
   final String? linkedinUrl;
   final bool isSelected;
   final VoidCallback? onTap;
@@ -28,7 +27,6 @@ class UserCard extends StatelessWidget {
     required this.gender,
     required this.email,
     this.phoneNumber,
-    this.facebookUrl,
     this.linkedinUrl,
     this.isSelected = false,
     this.onTap,
@@ -117,34 +115,17 @@ class UserCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                    // Social buttons row
-                    if ((facebookUrl != null && facebookUrl!.isNotEmpty) || (linkedinUrl != null && linkedinUrl!.isNotEmpty)) ...[
+                    // LinkedIn button
+                    if (linkedinUrl != null && linkedinUrl!.isNotEmpty) ...[
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          if (facebookUrl != null && facebookUrl!.isNotEmpty) ...[
-                            ElevatedButton.icon(
-                              onPressed: () => _launchUrl(facebookUrl!),
-                              icon: const Icon(Icons.facebook, size: 20),
-                              label: const Text('Facebook'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1877F2),
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          if (linkedinUrl != null && linkedinUrl!.isNotEmpty)
-                            ElevatedButton.icon(
-                              onPressed: () => _launchUrl(linkedinUrl!),
-                              icon: const FaIcon(FontAwesomeIcons.linkedin, size: 20),
-                              label: const Text('LinkedIn'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0A66C2),
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                        ],
+                      ElevatedButton.icon(
+                        onPressed: () => _launchUrl(linkedinUrl!),
+                        icon: const FaIcon(FontAwesomeIcons.linkedin, size: 20),
+                        label: const Text('LinkedIn'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0A66C2),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ],
                   ],
@@ -215,6 +196,10 @@ class UserCard extends StatelessWidget {
   }
 
   Future<void> _launchUrl(String url) async {
+    if (!url.startsWith('https://')) {
+      // For security, only launch HTTPS URLs
+      return;
+    }
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
