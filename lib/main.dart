@@ -241,6 +241,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
     final roleController = TextEditingController(text: (user?.role ?? ''));
     final emailController = TextEditingController(text: (user?.email ?? ''));
     final phoneController = TextEditingController(text: (user?.phoneNumber ?? ''));
+    final linkedinController = TextEditingController(text: (user?.linkedinUrl ?? ''));
     String gender = (user?.gender ?? 'male');
     final isEdit = user != null;
     final formKey = GlobalKey<FormState>();
@@ -283,10 +284,22 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                     decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone), hintText: '+1234567890'),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return null;
-                      final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\[\]]'), '');
+                      final cleaned = value.replaceAll(RegExp(r'[]\s\-\(\)\[\]]'), '');
                       final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
                       if (!regex.hasMatch(cleaned)) {
                         return 'Invalid phone format';
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: linkedinController,
+                    decoration: const InputDecoration(labelText: 'LinkedIn URL', prefixIcon: Icon(Icons.link)),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return null;
+                      final uri = Uri.tryParse(value.trim());
+                      if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+                        return 'Invalid URL';
                       }
                       return null;
                     },
@@ -327,8 +340,9 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
       final role = roleController.text.trim();
       final email = emailController.text.trim();
       final phoneNumber = phoneController.text.trim().isEmpty ? null : phoneController.text.trim();
+      final linkedinUrl = linkedinController.text.trim().isEmpty ? null : linkedinController.text.trim();
       try {
-        final body = json.encode({'firstName': firstName, 'lastName': lastName, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': gender});
+        final body = json.encode({'firstName': firstName, 'lastName': lastName, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'linkedinUrl': linkedinUrl, 'gender': gender});
         final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!.id}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
@@ -373,6 +387,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           gender: user.gender,
           email: user.email,
           phoneNumber: user.phoneNumber,
+          linkedinUrl: user.linkedinUrl,
+          facebookUrl: null,
           isSelected: _selectedUserIds.contains(user.id),
           onTap: () {
             setState(() {
