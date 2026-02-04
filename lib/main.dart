@@ -310,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) return null;
                       final cleaned = value.replaceAll(RegExp(r'[ -\u007F]'), '');
-                      final regex = RegExp(r'^\+?[1-9]\d{6,14}$');
+                      final regex = RegExp(r'^ ?[1-9] 6,14}$');
                       if (!regex.hasMatch(cleaned)) {
                         return 'Invalid phone format';
                       }
