@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../mixins/filter_sort_mixin.dart';
+import 'package:cool_app_fe/mixins/filter_sort_mixin.dart';
 
 class FilterSortBar extends StatelessWidget {
   final String searchQuery;
