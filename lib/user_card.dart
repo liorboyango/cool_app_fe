@@ -11,6 +11,7 @@ class UserCard extends StatelessWidget {
   final String email;
   final String? phoneNumber;
   final String? facebookUrl;
+  final String? linkedinUrl;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -27,6 +28,7 @@ class UserCard extends StatelessWidget {
     required this.email,
     this.phoneNumber,
     this.facebookUrl,
+    this.linkedinUrl,
     this.isSelected = false,
     this.onTap,
     this.onEdit,
@@ -114,17 +116,39 @@ class UserCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                    // Facebook button
-                    if (facebookUrl != null && facebookUrl!.isNotEmpty) ...[
+                    // Social media buttons row
+                    if ((facebookUrl != null && facebookUrl!.isNotEmpty) || 
+                        (linkedinUrl != null && linkedinUrl!.isNotEmpty)) ...[
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(facebookUrl!),
-                        icon: const Icon(Icons.facebook, size: 20),
-                        label: const Text('Facebook'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1877F2),
-                          foregroundColor: Colors.white,
-                        ),
+                      Row(
+                        children: [
+                          // Facebook button
+                          if (facebookUrl != null && facebookUrl!.isNotEmpty)
+                            ElevatedButton.icon(
+                              onPressed: () => _launchUrl(facebookUrl!),
+                              icon: const Icon(Icons.facebook, size: 20),
+                              label: const Text('Facebook'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1877F2),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          // Spacing between buttons
+                          if ((facebookUrl != null && facebookUrl!.isNotEmpty) && 
+                              (linkedinUrl != null && linkedinUrl!.isNotEmpty))
+                            const SizedBox(width: 8),
+                          // LinkedIn button
+                          if (linkedinUrl != null && linkedinUrl!.isNotEmpty)
+                            ElevatedButton.icon(
+                              onPressed: () => _launchUrl(linkedinUrl!),
+                              icon: const Icon(Icons.business, size: 20),
+                              label: const Text('LinkedIn'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0A66C2),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ],
