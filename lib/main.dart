@@ -236,12 +236,12 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
   }
 
   Future<void> _showUserDialog({User? user}) async {
-    final firstNameController = TextEditingController(text: (user?.firstName ?? ''));
-    final lastNameController = TextEditingController(text: (user?.lastName ?? ''));
-    final roleController = TextEditingController(text: (user?.role ?? ''));
-    final emailController = TextEditingController(text: (user?.email ?? ''));
-    final phoneController = TextEditingController(text: (user?.phoneNumber ?? ''));
-    String gender = (user?.gender ?? 'male');
+    final firstNameController = TextEditingController(text: user?.firstName ?? '');
+    final lastNameController = TextEditingController(text: user?.lastName ?? '');
+    final roleController = TextEditingController(text: user?.role ?? '');
+    final emailController = TextEditingController(text: user?.email ?? '');
+    final phoneController = TextEditingController(text: user?.phoneNumber ?? '');
+    String gender = user?.gender ?? 'male';
     final isEdit = user != null;
     final formKey = GlobalKey<FormState>();
     bool isLoading = false;
