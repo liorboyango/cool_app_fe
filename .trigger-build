@@ -1,0 +1,3 @@
+# Trigger file to run CI/CD pipeline
+# This will run flutter pub get and build_runner build
+# Timestamp: 2024-02-04T13:30:00Z
