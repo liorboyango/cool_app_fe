@@ -236,16 +236,15 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
   }
 
   Future<void> _showUserDialog({User? user}) async {
-    final firstNameController = TextEditingController(text: user?.firstName ?? '');
-    final lastNameController = TextEditingController(text: user?.lastName ?? '');
-    final roleController = TextEditingController(text: user?.role ?? '');
-    final emailController = TextEditingController(text: user?.email ?? '');
-    final phoneController = TextEditingController(text: user?.phoneNumber ?? '');
-    final String gender = user?.gender ?? 'male';
     final isEdit = user != null;
+    final firstNameController = TextEditingController(text: isEdit ? user.firstName : '');
+    final lastNameController = TextEditingController(text: isEdit ? user.lastName : '');
+    final roleController = TextEditingController(text: isEdit ? user.role : '');
+    final emailController = TextEditingController(text: isEdit ? user.email : '');
+    final phoneController = TextEditingController(text: isEdit ? (user.phoneNumber ?? '') : '');
     final formKey = GlobalKey<FormState>();
     bool isLoading = false;
-    String selectedGender = gender;
+    String selectedGender = isEdit ? user.gender : 'male';
 
     final result = await showDialog<bool>(
       context: context,
@@ -335,7 +334,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
       final phoneNumber = phoneController.text.trim().isEmpty ? null : phoneController.text.trim();
       try {
         final body = json.encode({'firstName': firstName, 'lastName': lastName, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': selectedGender});
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user.id}' : '${Constants.webServiceBaseUrl}/api/users';
+        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!.id}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
           Uri.parse(url),
