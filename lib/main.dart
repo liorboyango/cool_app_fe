@@ -241,10 +241,11 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
     final roleController = TextEditingController(text: user?.role ?? '');
     final emailController = TextEditingController(text: user?.email ?? '');
     final phoneController = TextEditingController(text: user?.phoneNumber ?? '');
-    String gender = user?.gender ?? 'male';
+    final String gender = user?.gender ?? 'male';
     final isEdit = user != null;
     final formKey = GlobalKey<FormState>();
     bool isLoading = false;
+    String selectedGender = gender;
 
     final result = await showDialog<bool>(
       context: context,
@@ -297,10 +298,10 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: gender,
+                    value: selectedGender,
                     decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc)),
                     items: ['male', 'female'].map((g) => DropdownMenuItem(value: g, child: Text(g[0].toUpperCase() + g.substring(1)))).toList(),
-                    onChanged: (value) => setState(() => gender = value!),
+                    onChanged: (value) => setState(() => selectedGender = value!),
                     validator: (value) => value == null ? 'Gender is required' : null,
                   ),
                 ],
@@ -333,8 +334,8 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
       final email = emailController.text.trim();
       final phoneNumber = phoneController.text.trim().isEmpty ? null : phoneController.text.trim();
       try {
-        final body = json.encode({'firstName': firstName, 'lastName': lastName, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': gender});
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!.id}' : '${Constants.webServiceBaseUrl}/api/users';
+        final body = json.encode({'firstName': firstName, 'lastName': lastName, 'role': role, 'email': email, 'phoneNumber': phoneNumber, 'gender': selectedGender});
+        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user.id}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
           Uri.parse(url),
