@@ -263,21 +263,25 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                     decoration: const InputDecoration(labelText: 'First Name', prefixIcon: Icon(Icons.person)),
                     validator: (value) => value?.trim().isEmpty ?? true ? 'First name is required' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: lastNameController,
                     decoration: const InputDecoration(labelText: 'Last Name', prefixIcon: Icon(Icons.person_outline)),
                     validator: (value) => value?.trim().isEmpty ?? true ? 'Last name is required' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: roleController,
                     decoration: const InputDecoration(labelText: 'Role', prefixIcon: Icon(Icons.work)),
                     validator: (value) => value?.trim().isEmpty ?? true ? 'Role is required' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: emailController,
                     decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
                     validator: (value) => value?.trim().isEmpty ?? true ? 'Email is required' : null,
                   ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: phoneController,
                     decoration: const InputDecoration(labelText: 'Phone Number (E.164)', prefixIcon: Icon(Icons.phone), hintText: '+1234567890'),
@@ -291,6 +295,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: gender,
                     decoration: const InputDecoration(labelText: 'Gender', prefixIcon: Icon(Icons.wc)),
@@ -373,6 +378,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           gender: user.gender,
           email: user.email,
           phoneNumber: user.phoneNumber,
+          linkedinUrl: user.linkedinUrl,
           isSelected: _selectedUserIds.contains(user.id),
           onTap: () {
             setState(() {
