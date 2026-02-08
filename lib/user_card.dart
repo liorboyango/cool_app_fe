@@ -11,6 +11,7 @@ class UserCard extends StatelessWidget {
   final String email;
   final String? phoneNumber;
   final String? facebookUrl;
+  final String? linkedinUrl;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -27,6 +28,7 @@ class UserCard extends StatelessWidget {
     required this.email,
     this.phoneNumber,
     this.facebookUrl,
+    this.linkedinUrl,
     this.isSelected = false,
     this.onTap,
     this.onEdit,
@@ -123,6 +125,19 @@ class UserCard extends StatelessWidget {
                         label: const Text('Facebook'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1877F2),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                    // LinkedIn button
+                    if (linkedinUrl != null && linkedinUrl!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _launchUrl(linkedinUrl!),
+                        icon: const Icon(Icons.business, size: 20),
+                        label: const Text('LinkedIn'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0A66C2),
                           foregroundColor: Colors.white,
                         ),
                       ),
