@@ -373,6 +373,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           gender: user.gender,
           email: user.email,
           phoneNumber: user.phoneNumber,
+          linkedinUrl: user.linkedinUrl,
           isSelected: _selectedUserIds.contains(user.id),
           onTap: () {
             setState(() {
