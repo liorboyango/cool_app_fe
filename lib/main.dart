@@ -360,7 +360,10 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           'linkedinUrl': linkedinUrl,
           'gender': gender,
         });
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!.id}' : '${Constants.webServiceBaseUrl}/api/users';
+        final userId = user?.id;
+        final url = isEdit && userId != null
+            ? '${Constants.webServiceBaseUrl}/api/users/$userId'
+            : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
           Uri.parse(url),
@@ -369,18 +372,24 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
         );
         if (response.statusCode == 200 || response.statusCode == 201) {
           await _fetchUsers();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(isEdit ? 'User updated' : 'User added')),
+            );
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to save user')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to save user')),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       }
     }
   }
