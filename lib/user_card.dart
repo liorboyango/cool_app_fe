@@ -11,6 +11,7 @@ class UserCard extends StatelessWidget {
   final String email;
   final String? phoneNumber;
   final String? facebookUrl;
+  final String? linkedinUrl;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -27,6 +28,7 @@ class UserCard extends StatelessWidget {
     required this.email,
     this.phoneNumber,
     this.facebookUrl,
+    this.linkedinUrl,
     this.isSelected = false,
     this.onTap,
     this.onEdit,
