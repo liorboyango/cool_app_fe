@@ -46,123 +46,141 @@ class UserCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         onLongPress: onDelete,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 40, // Increased from default ~20 to 40 for 80x80
-                backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                backgroundColor: avatarUrl.isNotEmpty ? null : theme.colorScheme.primary,
-                child: avatarUrl.isNotEmpty ? null : Text(
-                  firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
-                  style: TextStyle(
-                    color: theme.colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20, // Adjusted for larger avatar
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(fullName, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    if (location.isNotEmpty) Text(location),
-                    // Tappable email address
-                    if (email.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      GestureDetector(
-                        onTap: () => _launchUrl('mailto:$email'),
-                        child: Text(
-                          email,
-                          style: TextStyle(
-                            color: theme.colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 40, // Increased from default ~20 to 40 for 80x80
+                    backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                    backgroundColor: avatarUrl.isNotEmpty ? null : theme.colorScheme.primary,
+                    child: avatarUrl.isNotEmpty ? null : Text(
+                      firstName.isNotEmpty ? firstName[0].toUpperCase() : '?',
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20, // Adjusted for larger avatar
                       ),
-                    ],
-                    Wrap(
-                      spacing: 6,
-                      children: tags.map((tag) => _buildTag(tag, theme)).toList(),
                     ),
-                    if (phoneNumber != null && phoneNumber!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        phoneNumber!,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _CallButton(
-                            icon: Icons.phone,
-                            color: const Color(0xFF007AFF),
-                            onTap: () => _launchUrl('tel:$phoneNumber'),
-                          ),
-                          const SizedBox(width: 8),
-                          _CallButton(
-                            icon: Icons.chat,
-                            color: const Color(0xFF25D366),
-                            onTap: () => _launchUrl('https://wa.me/${phoneNumber!.replaceAll(RegExp(r'[^0-9]'), '')}'),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(fullName, style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 4),
+                        if (location.isNotEmpty) Text(location),
+                        // Tappable email address
+                        if (email.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          GestureDetector(
+                            onTap: () => _launchUrl('mailto:$email'),
+                            child: Text(
+                              email,
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                    ],
-                    // Facebook button
-                    if (facebookUrl != null && facebookUrl!.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(facebookUrl!),
-                        icon: const Icon(Icons.facebook, size: 20),
-                        label: const Text('Facebook'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1877F2),
-                          foregroundColor: Colors.white,
+                        Wrap(
+                          spacing: 6,
+                          children: tags.map((tag) => _buildTag(tag, theme)).toList(),
                         ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // Trailing
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getBadgeColor(gender, isDark),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      gender.toLowerCase() == 'male' ? 'M' : 'F',
-                      style: TextStyle(
-                        color: _getBadgeTextColor(gender, isDark),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                        if (phoneNumber != null && phoneNumber!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            phoneNumber!,
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              _CallButton(
+                                icon: Icons.phone,
+                                color: const Color(0xFF007AFF),
+                                onTap: () => _launchUrl('tel:$phoneNumber'),
+                              ),
+                              const SizedBox(width: 8),
+                              _CallButton(
+                                icon: Icons.chat,
+                                color: const Color(0xFF25D366),
+                                onTap: () => _launchUrl('https://wa.me/${phoneNumber!.replaceAll(RegExp(r'[^0-9]'), '')}'),
+                              ),
+                            ],
+                          ),
+                        ],
+                        // Facebook button
+                        if (facebookUrl != null && facebookUrl!.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          ElevatedButton.icon(
+                            onPressed: () => _launchUrl(facebookUrl!),
+                            icon: const Icon(Icons.facebook, size: 20),
+                            label: const Text('Facebook'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1877F2),
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                  if (onEdit != null) ...[
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: onEdit,
-                      tooltip: 'Edit user',
-                    ),
-                  ],
+                  // Trailing
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getBadgeColor(gender, isDark),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          gender.toLowerCase() == 'male' ? 'M' : 'F',
+                          style: TextStyle(
+                            color: _getBadgeTextColor(gender, isDark),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (onEdit != null) ...[
+                        const SizedBox(height: 8),
+                        IconButton(
+                          icon: const Icon(Icons.edit, size: 20),
+                          onPressed: onEdit,
+                          tooltip: 'Edit user',
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+            if (linkedinUrl != null && linkedinUrl!.isNotEmpty)
+              Positioned(
+                bottom: 12,
+                left: 12,
+                child: IconButton(
+                  icon: const Icon(Icons.link),
+                  color: const Color(0xFF0A66C2),
+                  iconSize: 24,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _launchUrl(linkedinUrl!),
+                  tooltip: 'LinkedIn Profile',
+                ),
+              ),
+          ],
         ),
       ),
     );
