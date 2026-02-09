@@ -369,7 +369,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           'linkedinUrl': linkedinUrl,
           'gender': gender,
         });
-        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user!.id}' : '${Constants.webServiceBaseUrl}/api/users';
+        final url = isEdit ? '${Constants.webServiceBaseUrl}/api/users/${user?.id}' : '${Constants.webServiceBaseUrl}/api/users';
         final method = isEdit ? http.put : http.post;
         final response = await method(
           Uri.parse(url),
