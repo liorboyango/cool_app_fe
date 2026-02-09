@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class UserCard extends StatelessWidget {
   final String firstName;
@@ -11,6 +12,7 @@ class UserCard extends StatelessWidget {
   final String email;
   final String? phoneNumber;
   final String? facebookUrl;
+  final String? linkedinUrl;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -27,6 +29,7 @@ class UserCard extends StatelessWidget {
     required this.email,
     this.phoneNumber,
     this.facebookUrl,
+    this.linkedinUrl,
     this.isSelected = false,
     this.onTap,
     this.onEdit,
@@ -114,17 +117,29 @@ class UserCard extends StatelessWidget {
                         ],
                       ),
                     ],
-                    // Facebook button
-                    if (facebookUrl != null && facebookUrl!.isNotEmpty) ...[
+                    // Social media buttons row
+                    if ((facebookUrl != null && facebookUrl!.isNotEmpty) || (linkedinUrl != null && linkedinUrl!.isNotEmpty)) ...[
                       const SizedBox(height: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _launchUrl(facebookUrl!),
-                        icon: const Icon(Icons.facebook, size: 20),
-                        label: const Text('Facebook'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1877F2),
-                          foregroundColor: Colors.white,
-                        ),
+                      Row(
+                        children: [
+                          if (linkedinUrl != null && linkedinUrl!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _SocialButton(
+                                icon: FontAwesomeIcons.linkedin,
+                                color: const Color(0xFF0A66C2),
+                                label: 'LinkedIn',
+                                onTap: () => _launchUrl(linkedinUrl!),
+                              ),
+                            ),
+                          if (facebookUrl != null && facebookUrl!.isNotEmpty)
+                            _SocialButton(
+                              icon: Icons.facebook,
+                              color: const Color(0xFF1877F2),
+                              label: 'Facebook',
+                              onTap: () => _launchUrl(facebookUrl!),
+                            ),
+                        ],
                       ),
                     ],
                   ],
@@ -226,6 +241,35 @@ class _CallButton extends StatelessWidget {
           height: 40,
           child: Icon(icon, color: color, size: 20),
         ),
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SocialButton({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        minimumSize: const Size(0, 36),
       ),
     );
   }
