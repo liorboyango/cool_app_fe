@@ -244,6 +244,7 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
     final linkedinController = TextEditingController(text: user?.linkedinUrl ?? '');
     String gender = user?.gender ?? 'male';
     final isEdit = user != null;
+    final int? userId = user?.id;
     final formKey = GlobalKey<FormState>();
     bool isLoading = false;
 
@@ -360,7 +361,6 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
           'linkedinUrl': linkedinUrl,
           'gender': gender,
         });
-        final userId = user?.id;
         final url = isEdit && userId != null
             ? '${Constants.webServiceBaseUrl}/api/users/$userId'
             : '${Constants.webServiceBaseUrl}/api/users';
