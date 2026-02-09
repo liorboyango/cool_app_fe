@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'user_card.dart';
 
 void main() {
   runApp(MyApp());
@@ -8,46 +9,30 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    User? user = getUser();
-    return Scaffold(
-      body: Center(
-        child: Column(
-          children: [
-            Text(user?.gender ?? 'unknown'),
-            Text(user?.role ?? 'unknown'),
-            ElevatedButton(
-              onPressed: () {
-                print(user?.id);
-              },
-              child: Text('Button'),
-            ),
-          ],
-        ),
+      home: Scaffold(
+        body: UserCard(),
       ),
     );
-  }
-
-  void someMethod() {
-    User? user = getUser();
-    print(user?.id);
   }
 }
 
 class User {
   String gender;
   String role;
-  String id;
+  int id;
   User(this.gender, this.role, this.id);
 }
 
-User? getUser() {
-  return User('male', 'admin', '1');
+void someFunction() {
+  User? user = User('male', 'admin', 1);
+  // line 116
+  String gender = user!.gender;
+  // 117
+  String role = user!.role;
+  // more code
+  User? u = User('female', 'user', 2);
+  // 183
+  int id = u!.id;
+  // 202
+  int id2 = u!.id;
 }
