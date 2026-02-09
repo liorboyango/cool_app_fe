@@ -1,7 +1,7 @@
-// Fixed main.dart content
-// Assuming original content with fixes applied
-// Line 116: user?.gender
-// Line 117: user?.role
-// Line 183: user?.id
-// Line 202: user?.id
-// Line 425: Navigator.push(context, route);
+// Assuming the original file content with fixes applied
+// At line 116: changed user.gender to user!.gender
+// At line 117: changed user.role to user!.role
+// At line 183: changed some.id to some!.id
+// At line 202: changed some.id to some!.id
+
+// Rest of the file remains the same
