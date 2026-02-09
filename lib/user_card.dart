@@ -46,7 +46,6 @@ class UserCard extends StatelessWidget {
       color: isSelected ? theme.colorScheme.primaryContainer : null,
       child: InkWell(
         onTap: onTap,
-        onLongPress: onDelete,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
@@ -130,49 +129,51 @@ class UserCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                    // Action buttons row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (linkedinUrl != null && linkedinUrl!.isNotEmpty)
+                          IconButton(
+                            icon: const FaIcon(
+                              FontAwesomeIcons.linkedin,
+                              color: Color(0xFF0A66C2),
+                              size: 20,
+                            ),n                            onPressed: () => _launchUrl(linkedinUrl!),
+                            tooltip: 'LinkedIn Profile',
+                          ),
+                        if (onEdit != null)
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            onPressed: onEdit,
+                            tooltip: 'Edit user',
+                          ),
+                        if (onDelete != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete, size: 20),
+                            onPressed: onDelete,
+                            tooltip: 'Delete user',
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
               // Trailing
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getBadgeColor(gender, isDark),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      gender.toLowerCase() == 'male' ? 'M' : 'F',
-                      style: TextStyle(
-                        color: _getBadgeTextColor(gender, isDark),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getBadgeColor(gender, isDark),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  gender.toLowerCase() == 'male' ? 'M' : 'F',
+                  style: TextStyle(
+                    color: _getBadgeTextColor(gender, isDark),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
-                  if (linkedinUrl != null && linkedinUrl!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: const FaIcon(
-                        FontAwesomeIcons.linkedin,
-                        color: Color(0xFF0A66C2),
-                        size: 20,
-                      ),
-                      onPressed: () => _launchUrl(linkedinUrl!),
-                      tooltip: 'LinkedIn Profile',
-                    ),
-                  ],
-                  if (onEdit != null) ...[
-                    const SizedBox(height: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
-                      onPressed: onEdit,
-                      tooltip: 'Edit user',
-                    ),
-                  ],
-                ],
+                ),
               ),
             ],
           ),
