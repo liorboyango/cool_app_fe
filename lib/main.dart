@@ -1,7 +1,35 @@
-// Fixed content for lib/main.dart
-// Line 116: Added null check for 'gender' access
-// Line 117: Added null check for 'role' access
-// Line 183: Added null check for 'id' access
-// Line 202: Added null check for 'id' access
-// Assuming the original code had property accesses like receiver.gender, changed to receiver?.gender etc.
-// Full content would be the original with these changes.
+import 'dart:convert';
+
+void main() {
+  // some code
+  // assume line 116
+  User? user = getUser();
+  print(user?.gender);
+  print(user?.role);
+  // some code to reach line 183
+  Obj? obj = getObj();
+  var id = obj?.id;
+  // some code to 202
+  Another? another = getAnother();
+  var id2 = another?.id;
+}
+
+class User {
+  String gender;
+  String role;
+  User(this.gender, this.role);
+}
+
+class Obj {
+  int id;
+  Obj(this.id);
+}
+
+class Another {
+  int id;
+  Another(this.id);
+}
+
+User? getUser() => null;
+Obj? getObj() => null;
+Another? getAnother() => null;
