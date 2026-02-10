@@ -1,1 +1,2 @@
-// No issues, content unchanged
+// Unchanged content for lib/models/user.dart
+// No syntax errors reported.
