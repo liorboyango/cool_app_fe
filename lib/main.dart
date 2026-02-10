@@ -1,17 +1,20 @@
-import 'dart:convert';
+import 'dart:io';
 
 void main() {
-  // some code
-  // assume line 116
   User? user = getUser();
-  print(user?.gender);
-  print(user?.role);
-  // some code to reach line 183
-  Obj? obj = getObj();
-  var id = obj?.id;
-  // some code to 202
-  Another? another = getAnother();
-  var id2 = another?.id;
+  if (user != null) {
+    print(user.gender);
+  }
+  if (user != null) {
+    print(user.role);
+  }
+  Item? item = getItem();
+  if (item != null) {
+    print(item.id);
+  }
+  if (item != null) {
+    print(item.id);
+  }
 }
 
 class User {
@@ -20,16 +23,11 @@ class User {
   User(this.gender, this.role);
 }
 
-class Obj {
-  int id;
-  Obj(this.id);
-}
-
-class Another {
-  int id;
-  Another(this.id);
+class Item {
+  String id;
+  Item(this.id);
 }
 
 User? getUser() => null;
-Obj? getObj() => null;
-Another? getAnother() => null;
+
+Item? getItem() => null;
