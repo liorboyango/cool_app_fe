@@ -21,6 +21,7 @@ dependencies:
   http: ^1.6.0
   provider: ^6.1.5+1
   url_launcher: ^6.3.0
+  shared_preferences: ^2.3.5
 
   # Required for json_serializable
   json_annotation: ^4.9.0
