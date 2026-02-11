@@ -11,6 +11,7 @@ import 'theme_notifier.dart';
 import 'settings_screen.dart';
 import 'user_card.dart';
 import 'widgets/filter_sort_bar.dart';
+import 'widgets/status_time_card.dart';
 import 'mixins/filter_sort_mixin.dart';
 import 'models/user.dart';
 
@@ -53,6 +54,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
   String _status = 'Fetching...';
+  DateTime _statusTime = DateTime.now();
+  bool _isServerActive = false;
   List<User> _users = [];
   String _searchQuery = '';
   Set<int> _selectedUserIds = {};
@@ -76,16 +79,31 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _status = 'Status: ${data['status']}, Time: ${data['timestamp']}';
+          _status = data['status'] ?? 'Unknown';
+          _isServerActive = _status.toLowerCase() == 'ok' || _status.toLowerCase() == 'online';
+          // Parse timestamp if available
+          if (data['timestamp'] != null) {
+            try {
+              _statusTime = DateTime.parse(data['timestamp']);
+            } catch (e) {
+              _statusTime = DateTime.now();
+            }
+          } else {
+            _statusTime = DateTime.now();
+          }
         });
       } else {
         setState(() {
           _status = 'Server error: ${response.statusCode}';
+          _isServerActive = false;
+          _statusTime = DateTime.now();
         });
       }
     } catch (e) {
       setState(() {
         _status = 'Error: $e';
+        _isServerActive = false;
+        _statusTime = DateTime.now();
       });
     }
   }
@@ -433,19 +451,13 @@ class _MyHomePageState extends State<MyHomePage> with FilterSortMixin<User> {
         color: theme.scaffoldBackgroundColor,
         child: Column(
           children: [
+            // New StatusTimeCard widget
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info, color: theme.colorScheme.primary),
-                      const SizedBox(width: 16),
-                      Expanded(child: Text(_status, style: theme.textTheme.headlineSmall)),
-                    ],
-                  ),
-                ),
+              child: StatusTimeCard(
+                status: _status,
+                time: _statusTime,
+                isActive: _isServerActive,
               ),
             ),
             Padding(
